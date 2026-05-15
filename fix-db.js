@@ -15,6 +15,7 @@ const migrations = [
   `ALTER TABLE public.gigs ADD COLUMN IF NOT EXISTS dropoff_landmark TEXT`,
   `ALTER TABLE public.gigs ADD COLUMN IF NOT EXISTS offered_price NUMERIC DEFAULT 0`,
   `ALTER TABLE public.gigs ADD COLUMN IF NOT EXISTS is_visible_to_all BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE public.gigs ADD COLUMN IF NOT EXISTS published_to_all_at TIMESTAMPTZ DEFAULT NOW()`,
 
   // ── Remove broken FK so user_id maps directly to auth.uid() ──
   // The FK gigs_user_id_fkey references public.users.id

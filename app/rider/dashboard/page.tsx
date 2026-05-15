@@ -41,49 +41,67 @@ export default function RiderDashboard() {
   useEffect(() => {
     if (!user) return;
 
-    fetchGigs();
+    let isCompany = false;
 
-    // Subscribe to new broadcast gigs
-    const gigsChannel = supabase
-      .channel('public:gigs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gigs' }, (payload) => {
-        setGigs((prev) => [payload.new, ...prev]);
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gigs' }, (payload) => {
-        setGigs((prev) => prev.map(g => g.id === payload.new.id ? payload.new : g).filter(g => g.status === 'pending'));
-      })
-      .subscribe();
+    const init = async () => {
+      const { data: profile } = await supabase
+        .from('users')
+        .select('is_company_rider')
+        .eq('id', user.id)
+        .single();
+      
+      isCompany = profile?.is_company_rider || false;
+      fetchGigs(isCompany);
 
-    // Subscribe to direct requests targeting this rider
-    const directChannel = supabase
-      .channel(`rider:${user.id}:direct_requests`)
-      .on('postgres_changes', { 
-        event: 'INSERT', 
-        schema: 'public', 
-        table: 'direct_requests', 
-        filter: `rider_id=eq.${user.id}` 
-      }, (payload) => {
-        if (payload.new.status === 'pending') {
-          setDirectRequest(payload.new);
-          setCountdown(180);
-        }
-      })
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'direct_requests',
-        filter: `rider_id=eq.${user.id}`
-      }, (payload) => {
-        if (payload.new.status !== 'pending') {
-          setDirectRequest(null);
-        }
-      })
-      .subscribe();
+      // Subscribe to new broadcast gigs
+      const gigsChannel = supabase
+        .channel('public:gigs')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gigs' }, (payload) => {
+          const newGig = payload.new;
+          const isPublished = new Date(newGig.published_to_all_at) <= new Date();
+          if (isCompany || isPublished) {
+            setGigs((prev) => [newGig, ...prev]);
+          }
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gigs' }, (payload) => {
+          setGigs((prev) => prev.map(g => g.id === payload.new.id ? payload.new : g).filter(g => g.status === 'pending'));
+        })
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(gigsChannel);
-      supabase.removeChannel(directChannel);
+      // Subscribe to direct requests targeting this rider
+      const directChannel = supabase
+        .channel(`rider:${user.id}:direct_requests`)
+        .on('postgres_changes', { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'direct_requests', 
+          filter: `rider_id=eq.${user.id}` 
+        }, (payload) => {
+          if (payload.new.status === 'pending') {
+            setDirectRequest(payload.new);
+            setCountdown(180);
+          }
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'direct_requests',
+          filter: `rider_id=eq.${user.id}`
+        }, (payload) => {
+          if (payload.new.status !== 'pending') {
+            setDirectRequest(null);
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(gigsChannel);
+        supabase.removeChannel(directChannel);
+      };
     };
+
+    const cleanup = init();
+    return () => { cleanup.then(c => c && c()); };
   }, [user]);
 
   useEffect(() => {
@@ -96,13 +114,18 @@ export default function RiderDashboard() {
     return () => clearInterval(timer);
   }, [directRequest, countdown]);
 
-  const fetchGigs = async () => {
+  const fetchGigs = async (isCompany: boolean) => {
     setLoading(true);
-    const { data } = await supabase
+    let query = supabase
       .from('gigs')
       .select('*')
-      .eq('status', 'pending')
-      .order('created_at', { ascending: false });
+      .eq('status', 'pending');
+
+    if (!isCompany) {
+      query = query.lte('published_to_all_at', new Date().toISOString());
+    }
+
+    const { data } = await query.order('created_at', { ascending: false });
     
     if (data) setGigs(data);
     setLoading(false);

@@ -51,10 +51,25 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     if (!error) setIsOnline(nextStatus);
   };
 
-  const triggerSOS = () => {
+  const triggerSOS = async () => {
+    if (!user) return;
     if (confirm("🚨 Trigger Emergency SOS? This will alert dispatch and pause your active gigs.")) {
-      // Handle SOS logic
-      alert("SOS Triggered. Dispatch notified.");
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        const { error } = await supabase
+          .from('sos_alerts')
+          .insert({
+            rider_id: user.id,
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            status: 'active'
+          });
+        
+        if (error) alert("Error sending SOS: " + error.message);
+        else alert("🆘 SOS DISPATCHED. Help is on the way. Your current location has been sent to Mission Control.");
+      }, (err) => {
+        alert("Geolocation failed. Sending SOS without coordinates.");
+        supabase.from('sos_alerts').insert({ rider_id: user.id, status: 'active' });
+      });
     }
   };
 
