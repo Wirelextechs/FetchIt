@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { Search, MapPin, Navigation, ShieldCheck, Plus, Package, Bike, User, Loader2 } from "lucide-react";
+import { Search, MapPin, Navigation, ShieldCheck, Plus, Package, Bike, User, Loader2, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
@@ -71,90 +71,96 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 max-w-md mx-auto pb-20 shadow-2xl relative">
-      <div className="bg-emerald-600 px-4 pt-12 pb-6 text-white rounded-b-3xl shadow-lg relative overflow-hidden">
-        <div className="absolute top-0 right-0 opacity-10 mix-blend-overlay w-64 h-64 -mr-16 -mt-16 rounded-full bg-white blur-3xl"></div>
-        <div className="flex justify-between items-center relative z-10">
-          <div>
-            <p className="text-emerald-100 text-sm font-medium">Current Location</p>
-            <h1 className="text-xl font-bold flex items-center mt-1">
-              <MapPin className="w-5 h-5 mr-1" />
-              {DEFAULT_CITY.name} Region
-            </h1>
+    <div className="flex flex-col min-h-screen bg-slate-50 w-full pb-20 relative">
+      <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
+        {/* Header Section */}
+        <div className="bg-emerald-600 px-6 pt-12 pb-10 text-white md:rounded-[40px] md:mt-4 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 opacity-10 mix-blend-overlay w-64 h-64 -mr-16 -mt-16 rounded-full bg-white blur-3xl"></div>
+          <div className="flex justify-between items-center relative z-10">
+            <div>
+              <p className="text-emerald-100 text-sm font-medium">Current Location</p>
+              <h1 className="text-xl font-bold flex items-center mt-1">
+                <MapPin className="w-5 h-5 mr-1" />
+                {DEFAULT_CITY.name} Region
+              </h1>
+            </div>
+            <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
+              <span className="font-bold text-lg">
+                {user ? user.email?.charAt(0).toUpperCase() : "G"}
+              </span>
+            </div>
           </div>
-          <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center">
-            <span className="font-bold text-lg">
-              {user ? user.email?.charAt(0).toUpperCase() : "G"}
-            </span>
+          
+          <div className="mt-8 relative z-10 max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+              <input 
+                type="text" 
+                placeholder="What do you need? (e.g., Delivery, Groceries)"
+                className="w-full bg-white text-slate-800 rounded-2xl py-4 pl-12 pr-4 shadow-sm outline-none font-medium placeholder:font-normal placeholder:text-slate-400 focus:ring-4 focus:ring-emerald-400/20 transition-all text-sm md:text-base"
+              />
+            </div>
           </div>
         </div>
-        
-        <div className="mt-6 relative z-10">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-            <input 
-              type="text" 
-              placeholder="What do you need? (e.g., Delivery, Groceries)"
-              className="w-full bg-white text-slate-800 rounded-2xl py-3.5 pl-12 pr-4 shadow-sm outline-none font-medium placeholder:font-normal placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400 transition-all"
-            />
+
+        {/* Service Toggle */}
+        <div className="px-6 py-8 flex flex-col gap-6">
+          <div className="bg-white p-2 rounded-[28px] shadow-xl border border-slate-100 flex items-center max-w-xl self-center w-full">
+            <button 
+              onClick={() => setServiceMode("delivery")}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[20px] font-black text-xs uppercase tracking-widest transition-all ${
+                serviceMode === "delivery" 
+                  ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/20 scale-[1.02]" 
+                  : "text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              <Bike className="w-4 h-4" />
+              Delivery Riders
+            </button>
+            <button 
+              onClick={() => setServiceMode("shopping")}
+              className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[20px] font-black text-xs uppercase tracking-widest transition-all ${
+                serviceMode === "shopping" 
+                  ? "bg-emerald-600 text-white shadow-xl shadow-emerald-600/20 scale-[1.02]" 
+                  : "text-slate-500 hover:bg-slate-50"
+              }`}
+            >
+              <User className="w-4 h-4" />
+              Personal Shoppers
+            </button>
           </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={serviceMode}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-emerald-50/50 backdrop-blur-sm border border-emerald-100 p-6 rounded-[32px] max-w-3xl self-center w-full shadow-sm flex items-center gap-4"
+            >
+              <div className="w-10 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white shrink-0">
+                <Info className="w-5 h-5" />
+              </div>
+              <p className="text-emerald-800 text-xs md:text-sm font-bold leading-relaxed">
+                {serviceMode === "delivery" 
+                  ? "Fast logistics. Hire a rider to move packages or run quick custom errands."
+                  : "Market experts. Hire a vetted shopper to buy groceries and goods safely in the market for you."
+                }
+              </p>
+            </motion.div>
+          </AnimatePresence>
         </div>
-      </div>
 
-      <div className="px-4 -mt-4 relative z-20">
-        <div className="bg-white p-1.5 rounded-2xl shadow-xl flex items-center">
-          <button 
-            onClick={() => setServiceMode("delivery")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
-              serviceMode === "delivery" 
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" 
-                : "text-slate-500 hover:bg-slate-50"
-            }`}
-          >
-            <Bike className="w-4 h-4" />
-            Delivery Riders
-          </button>
-          <button 
-            onClick={() => setServiceMode("shopping")}
-            className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-bold text-sm transition-all ${
-              serviceMode === "shopping" 
-                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/20" 
-                : "text-slate-500 hover:bg-slate-50"
-            }`}
-          >
-            <User className="w-4 h-4" />
-            Personal Shoppers
-          </button>
-        </div>
-      </div>
-
-      <div className="p-4 space-y-6">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={serviceMode}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-emerald-50/50 backdrop-blur-sm border border-emerald-100 p-4 rounded-2xl"
-          >
-            <p className="text-emerald-800 text-sm font-medium leading-relaxed">
-              {serviceMode === "delivery" 
-                ? "Fast logistics. Hire a rider to move packages or run quick custom errands."
-                : "Market experts. Hire a vetted shopper to buy groceries and goods safely in the market for you. No need to leave you busy schedules."
-              }
-            </p>
-          </motion.div>
-        </AnimatePresence>
-
-        <div>
-          <div className="flex justify-between items-end mb-4">
-            <h2 className="text-lg font-bold text-slate-800">
-              {serviceMode === "delivery" ? "Available Riders Nearby" : "Available Shoppers Nearby"}
+        {/* List Section */}
+        <div className="px-6 pb-24 flex-1">
+          <div className="flex justify-between items-end mb-6">
+            <h2 className="text-xl font-black text-slate-800 tracking-tight">
+              {serviceMode === "delivery" ? "Available Riders" : "Available Shoppers"}
             </h2>
-            <span className="text-sm font-medium text-emerald-600">See all</span>
+            <span className="text-xs font-black text-emerald-600 uppercase tracking-widest">See all</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {serviceMode === "delivery" ? (
               <>
                 <RiderCard 
@@ -271,12 +277,14 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <button 
-        onClick={handlePostGig}
-        className="fixed bottom-24 right-4 sm:right-auto sm:ml-80 bg-emerald-600 text-white p-4 rounded-2xl shadow-xl shadow-emerald-600/30 hover:scale-105 transition-transform z-30"
-      >
-        <Plus className="w-6 h-6" />
-      </button>
+      <div className="fixed bottom-24 right-6 z-50">
+        <button 
+          onClick={handlePostGig}
+          className="w-16 h-16 bg-emerald-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-all group"
+        >
+          <Plus className="w-8 h-8 group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+      </div>
 
       <BottomNav />
     </div>
@@ -285,24 +293,24 @@ export default function HomePage() {
 
 function RiderCard({ id, name, type, i, onAction }: { id: string, name: string, type: 'company' | 'individual', i: number, onAction: () => void }) {
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-emerald-100">
+    <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl hover:scale-[1.02] transition-all">
+      <div className="flex items-center space-x-4">
+        <div className="w-16 h-16 bg-slate-200 rounded-[24px] flex items-center justify-center overflow-hidden border-2 border-emerald-100 shadow-inner">
           <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=rider-${i}`} alt="Avatar" className="w-full h-full object-cover" />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800 text-sm">{name}</h3>
-          <div className={`flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full mt-1 w-max ${
-            type === 'company' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+          <h3 className="font-black text-slate-800 text-base">{name}</h3>
+          <div className={`flex items-center text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full mt-2 w-max ${
+            type === 'company' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-blue-50 text-blue-600 border border-blue-100'
           }`}>
-            {type === 'company' ? <ShieldCheck className="w-3 h-3 mr-1" /> : <User className="w-3 h-3 mr-1" />}
-            {type === 'company' ? 'Company' : 'Individual'}
+            {type === 'company' ? <ShieldCheck className="w-3 h-3 mr-1.5" /> : <User className="w-3 h-3 mr-1.5" />}
+            {type === 'company' ? 'Company Verified' : 'Individual'}
           </div>
         </div>
       </div>
       <button 
         onClick={onAction}
-        className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-slate-800 transition-colors"
+        className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl hover:bg-emerald-600 transition-all active:scale-95 shadow-lg"
       >
         Request
       </button>
@@ -312,24 +320,24 @@ function RiderCard({ id, name, type, i, onAction }: { id: string, name: string, 
 
 function ShopperCard({ name, i, onAction }: { name: string, i: number, onAction: () => void }) {
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex items-center justify-between">
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-slate-200 rounded-full flex items-center justify-center overflow-hidden border-2 border-emerald-100">
+    <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl hover:scale-[1.02] transition-all">
+      <div className="flex items-center space-x-4">
+        <div className="w-16 h-16 bg-slate-200 rounded-[24px] flex items-center justify-center overflow-hidden border-2 border-emerald-100 shadow-inner">
           <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=shopper-${i}`} alt="Avatar" className="w-full h-full object-cover" />
         </div>
         <div>
-          <h3 className="font-semibold text-slate-800 text-sm">{name}</h3>
-          <div className="flex items-center text-emerald-600 text-[10px] font-bold bg-emerald-50 px-2 py-0.5 rounded-full mt-1 w-max">
-            <ShieldCheck className="w-3 h-3 mr-1" />
+          <h3 className="font-black text-slate-800 text-base">{name}</h3>
+          <div className="flex items-center text-emerald-600 text-[9px] font-black uppercase tracking-widest bg-emerald-50 px-3 py-1 rounded-full mt-2 w-max border border-emerald-100">
+            <ShieldCheck className="w-3 h-3 mr-1.5" />
             Verified Shopper
           </div>
         </div>
       </div>
       <button 
         onClick={onAction}
-        className="bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl hover:bg-slate-800 transition-colors"
+        className="bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl hover:bg-emerald-600 transition-all active:scale-95 shadow-lg"
       >
-        Request
+        Chat
       </button>
     </div>
   );

@@ -81,7 +81,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0F1115] text-white max-w-md mx-auto shadow-2xl relative overflow-hidden font-sans">
+    <div className="flex flex-col min-h-screen bg-[#0F1115] text-white w-full shadow-2xl relative overflow-hidden font-sans">
       {/* Top Header */}
       <header className="p-6 pt-14 bg-slate-900/40 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-[100]">
         <div className="flex justify-between items-center mb-6">
@@ -127,8 +127,8 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full max-w-md bg-[#0F1115]/90 backdrop-blur-2xl border-t border-white/5 safe-area-bottom z-[100]">
-        <div className="flex justify-around items-center h-20 px-4">
+      <nav className="fixed bottom-0 w-full bg-[#0F1115]/90 backdrop-blur-2xl border-t border-white/5 safe-area-bottom z-[100] flex justify-center">
+        <div className="w-full max-w-lg flex justify-around items-center h-20 px-4">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;

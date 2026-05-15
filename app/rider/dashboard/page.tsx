@@ -157,21 +157,21 @@ export default function RiderDashboard() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)]">
+    <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] overflow-hidden">
       {/* Tactical Radar Map */}
-      <div className="h-1/2 w-full relative">
+      <div className="h-1/2 lg:h-full lg:flex-1 relative border-r border-white/5">
         <RadarMap gigs={gigs} />
         <div className="absolute bottom-12 left-6 z-[400] bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
           <div className="relative">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Scanning techiman</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Scanning sector</span>
         </div>
       </div>
 
       {/* Gig Feed */}
-      <div className="flex-1 bg-[#0F1115] rounded-t-[40px] -mt-10 relative z-20 p-6 overflow-y-auto shadow-[0_-20px_60px_rgba(0,0,0,0.8)] border-t border-white/5">
+      <div className="flex-1 lg:max-w-md xl:max-w-lg bg-[#0F1115] rounded-t-[40px] lg:rounded-none -mt-10 lg:mt-0 relative z-20 p-6 overflow-y-auto shadow-[0_-20px_60px_rgba(0,0,0,0.8)] lg:shadow-none border-t lg:border-t-0 border-white/5 custom-scrollbar">
         <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-8 opacity-50" />
         
         <div className="flex justify-between items-end mb-8">
@@ -185,7 +185,7 @@ export default function RiderDashboard() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 gap-4">
           {loading ? (
             <div className="py-20 flex flex-col items-center gap-4">
               <Loader2 className="w-8 h-8 text-slate-700 animate-spin" />

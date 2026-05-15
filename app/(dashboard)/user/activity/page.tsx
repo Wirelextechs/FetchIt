@@ -52,39 +52,41 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 max-w-md mx-auto pb-24 shadow-2xl relative">
+    <div className="flex flex-col min-h-screen bg-slate-50 w-full pb-24 relative">
       <header className="px-6 pt-12 pb-6 bg-white border-b border-slate-100 sticky top-0 z-50">
-        <h1 className="text-2xl font-black text-slate-800">Your Activity</h1>
-        <div className="flex mt-6 bg-slate-100 p-1 rounded-2xl">
-          <button 
-            onClick={() => setActiveTab("ongoing")}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-              activeTab === "ongoing" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500"
-            }`}
-          >
-            Ongoing
-          </button>
-          <button 
-            onClick={() => setActiveTab("past")}
-            className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-              activeTab === "past" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500"
-            }`}
-          >
-            Past
-          </button>
+        <div className="max-w-7xl mx-auto w-full">
+          <h1 className="text-2xl font-black text-slate-800">Your Activity</h1>
+          <div className="flex mt-6 bg-slate-100 p-1 rounded-2xl max-w-md">
+            <button 
+              onClick={() => setActiveTab("ongoing")}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === "ongoing" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500"
+              }`}
+            >
+              Ongoing
+            </button>
+            <button 
+              onClick={() => setActiveTab("past")}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+                activeTab === "past" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500"
+              }`}
+            >
+              Past
+            </button>
+          </div>
         </div>
       </header>
 
-      <div className="flex-1 p-4">
+      <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 text-slate-400">
             <Loader2 className="w-8 h-8 animate-spin mb-2" />
             <p className="text-sm font-bold uppercase tracking-widest">Loading Mission Control…</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(activeTab === "ongoing" ? ongoing : past).length === 0 ? (
-              <div className="text-center py-20 px-10">
+              <div className="text-center py-20 px-10 col-span-full">
                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Clock className="w-10 h-10 text-slate-300" />
                 </div>

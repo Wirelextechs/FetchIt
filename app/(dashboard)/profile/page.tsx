@@ -79,9 +79,10 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 max-w-md mx-auto pb-32 border-x border-slate-200 shadow-2xl relative">
-      {/* Dynamic Glassmorphism Header */}
-      <div className="relative pt-16 pb-24 px-6 overflow-hidden">
+    <div className="min-h-screen bg-slate-50 w-full pb-32 relative">
+      <div className="max-w-4xl mx-auto w-full">
+        {/* Dynamic Glassmorphism Header */}
+        <div className="relative pt-16 pb-24 px-6 overflow-hidden md:rounded-[48px] md:mt-4">
         {/* Abstract Background Shapes */}
         <div className="absolute top-0 left-0 w-full h-full bg-slate-900">
            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse"></div>
@@ -191,6 +192,8 @@ export default function ProfilePage() {
         </div>
       </div>
 
+        </div>
+      </div>
       <BottomNav />
     </div>
   );
