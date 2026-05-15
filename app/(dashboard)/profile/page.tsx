@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/providers/AuthProvider";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { LogOut, User, Phone, Shield, Star, Package, Settings, ChevronRight, Loader2, MapPin, CreditCard } from "lucide-react";
+import { LogOut, User, Phone, Shield, Star, Package, Settings, ChevronRight, Loader2, MapPin, CreditCard, Bike } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
