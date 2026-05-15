@@ -189,10 +189,6 @@ export default function ProfilePage() {
            >
              Share App
            </button>
-        </div>
-      </div>
-
-        </div>
       </div>
       <BottomNav />
     </div>
