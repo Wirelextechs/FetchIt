@@ -100,11 +100,12 @@ export default function PostGigPage() {
   // ── Success State ─────────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center max-w-md mx-auto px-6 text-center">
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center w-full px-6 text-center">
         <motion.div
           initial={{ scale: 0.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 20 }}
+          className="max-w-md"
         >
           <div className="w-24 h-24 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border-4 border-emerald-100">
             <CheckCircle2 className="w-12 h-12 text-emerald-500" />
@@ -132,7 +133,8 @@ export default function PostGigPage() {
 
   // ── Form ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50 max-w-md mx-auto flex flex-col">
+    <div className="min-h-screen bg-slate-50 w-full flex flex-col">
+      <div className="max-w-4xl mx-auto w-full flex-1 flex flex-col relative pb-32">
       {/* Header */}
       <div className="bg-white sticky top-0 z-20 px-4 pt-10 pb-4 border-b border-slate-100 shadow-sm">
         <div className="flex items-center gap-3 mb-1">
@@ -322,32 +324,35 @@ export default function PostGigPage() {
       </div>
 
       {/* Fixed Submit Footer */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-30">
-        {/* Shadow timer info pill */}
-        <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-3">
-          <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
-          <p className="text-[11px] text-amber-700 font-medium">
-            Company Riders get <span className="font-bold">5 min priority</span> before all riders see your gig.
-          </p>
-        </div>
+      <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-md border-t border-slate-100 p-4 z-30">
+        <div className="max-w-4xl mx-auto">
+          {/* Shadow timer info pill */}
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-100 rounded-xl px-3 py-2 mb-3">
+            <ShieldCheck className="w-4 h-4 text-amber-500 shrink-0" />
+            <p className="text-[11px] text-amber-700 font-medium">
+              Company Riders get <span className="font-bold">5 min priority</span> before all riders see your gig.
+            </p>
+          </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={!isValid || loading}
-          className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 disabled:shadow-none"
-        >
-          {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
-          ) : (
-            <>
-              <span>Post Gig</span>
-              <span className="text-emerald-200 text-sm font-normal">
-                {form.offered_price ? `· GH₵${form.offered_price}` : ""}
-              </span>
-            </>
-          )}
-        </button>
+          <button
+            onClick={handleSubmit}
+            disabled={!isValid || loading}
+            className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 disabled:text-slate-400 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-600/20 disabled:shadow-none"
+          >
+            {loading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <>
+                <span>Post Gig</span>
+                <span className="text-emerald-200 text-sm font-normal">
+                  {form.offered_price ? `· GH₵${form.offered_price}` : ""}
+                </span>
+              </>
+            )}
+          </button>
+        </div>
       </div>
     </div>
+  </div>
   );
 }

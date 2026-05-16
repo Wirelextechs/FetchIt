@@ -5,6 +5,7 @@ import { MapPin, Search, X } from "lucide-react";
 
 interface LocationInputProps {
   onConfirm: (location: string) => void;
+  hideConfirmButton?: boolean;
 }
 
 const COMMON_LANDMARKS = [
@@ -16,7 +17,7 @@ const COMMON_LANDMARKS = [
   "Sunyani Market Circle",
 ];
 
-export default function LocationInput({ onConfirm }: LocationInputProps) {
+export default function LocationInput({ onConfirm, hideConfirmButton }: LocationInputProps) {
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -84,7 +85,7 @@ export default function LocationInput({ onConfirm }: LocationInputProps) {
       )}
 
       {/* Confirm Button */}
-      {value.length > 3 && (
+      {value.length > 3 && !hideConfirmButton && (
         <button
           onClick={() => onConfirm(value)}
           className="mt-3 w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold py-3 rounded-2xl transition-all shadow-lg shadow-amber-500/20 text-sm"

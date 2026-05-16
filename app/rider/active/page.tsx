@@ -116,7 +116,7 @@ export default function ActiveMission() {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-140px)] animate-in fade-in duration-700">
+    <div className="flex flex-col flex-1 h-full overflow-hidden animate-in fade-in duration-700">
       {/* Mission Header */}
       <div className="p-6 bg-[#16181D]/80 backdrop-blur-2xl border-b border-white/5 space-y-6 sticky top-0 z-50">
         <div className="flex justify-between items-start">

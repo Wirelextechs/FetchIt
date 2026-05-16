@@ -101,7 +101,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 sm:p-0">
+        <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center p-4 sm:p-0">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

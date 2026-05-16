@@ -157,11 +157,11 @@ export default function RiderDashboard() {
   };
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100vh-140px)] overflow-hidden">
+    <div className="flex flex-col lg:flex-row flex-1 h-full overflow-hidden relative">
       {/* Tactical Radar Map */}
-      <div className="h-1/2 lg:h-full lg:flex-1 relative border-r border-white/5">
+      <div className="h-[45vh] lg:h-full lg:flex-1 relative border-r border-white/5 shrink-0">
         <RadarMap gigs={gigs} />
-        <div className="absolute bottom-12 left-6 z-[400] bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
+        <div className="absolute bottom-16 lg:bottom-12 left-6 z-[400] bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
           <div className="relative">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -171,10 +171,11 @@ export default function RiderDashboard() {
       </div>
 
       {/* Gig Feed */}
-      <div className="flex-1 lg:max-w-md xl:max-w-lg bg-[#0F1115] rounded-t-[40px] lg:rounded-none -mt-10 lg:mt-0 relative z-20 p-6 overflow-y-auto shadow-[0_-20px_60px_rgba(0,0,0,0.8)] lg:shadow-none border-t lg:border-t-0 border-white/5 custom-scrollbar">
-        <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto mb-8 opacity-50" />
+      <div className="flex-1 flex flex-col bg-[#0F1115] rounded-t-[40px] lg:rounded-none -mt-12 lg:mt-0 relative z-20 overflow-hidden shadow-[0_-20px_60px_rgba(0,0,0,0.8)] lg:shadow-none border-t lg:border-t-0 border-white/5 lg:max-w-md xl:max-w-lg">
+        <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto my-4 shrink-0 lg:hidden opacity-50" />
         
-        <div className="flex justify-between items-end mb-8">
+        <div className="flex-1 overflow-y-auto px-6 pb-20 pt-2 lg:pt-8 custom-scrollbar">
+          <div className="flex justify-between items-end mb-8">
           <div>
             <h2 className="text-xl font-black tracking-tight text-white mb-1">Tactical Radar</h2>
             <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Missions in your sector</p>
@@ -207,6 +208,7 @@ export default function RiderDashboard() {
           )}
         </div>
       </div>
+    </div>
 
       {/* Direct Booking Takeover */}
       <AnimatePresence>

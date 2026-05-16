@@ -8,6 +8,7 @@ import { User } from "@supabase/supabase-js";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAuthModalOpen: boolean;
   requireAuth: (action: () => void) => void;
   signOut: () => Promise<void>;
 }
@@ -15,6 +16,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAuthModalOpen: false,
   requireAuth: () => {},
   signOut: async () => {},
 });
@@ -63,7 +65,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, requireAuth, signOut }}>
+    <AuthContext.Provider value={{ user, loading, isAuthModalOpen: showModal, requireAuth, signOut }}>
       {children}
       <LazyAuthModal 
         isOpen={showModal} 

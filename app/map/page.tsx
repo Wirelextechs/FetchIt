@@ -32,7 +32,7 @@ const RIDERS = [
 ];
 
 export default function MapPage() {
-  const { requireAuth } = useAuth();
+  const { requireAuth, isAuthModalOpen } = useAuth();
   const router = useRouter();
 
   const city = SUPPORTED_CITIES.techiman;
@@ -56,11 +56,11 @@ export default function MapPage() {
       style={{
         position: "relative",
         width: "100%",
-        maxWidth: "448px",
         height: "100svh",
         margin: "0 auto",
         overflow: "hidden",
       }}
+      className="max-w-7xl"
     >
       {/* ── 1. Full-screen Live Map ── */}
       <RiderTrackingMap
@@ -69,7 +69,7 @@ export default function MapPage() {
       />
 
       {/* ── 2. Top Bar ── */}
-      <div className="absolute top-0 left-0 right-0 z-[500] p-4 space-y-3">
+      <div className={`absolute top-0 left-0 right-0 z-[500] p-4 space-y-3 transition-opacity duration-300 ${isAuthModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* City badge + satellite toggle */}
         <div className="flex items-center justify-between gap-2">
           <div className="backdrop-blur-md bg-black/60 border border-white/10 rounded-full px-4 py-2 text-white text-xs font-bold flex items-center gap-2">
@@ -91,13 +91,16 @@ export default function MapPage() {
         </div>
 
         {/* Location Input */}
-        <LocationInput onConfirm={handleLocationConfirm} />
+        <LocationInput 
+          onConfirm={handleLocationConfirm} 
+          hideConfirmButton={sheetState === "confirm"}
+        />
       </div>
 
       {/* ── 3. Bottom Sheet ── */}
-      <div className="absolute bottom-16 left-0 right-0 z-[500] px-3">
+      <div className={`absolute bottom-16 left-0 right-0 z-[500] px-3 transition-opacity duration-300 ${isAuthModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <AnimatePresence mode="wait">
-          {sheetState === "riders" && (
+          {!isAuthModalOpen && sheetState === "riders" && (
             <motion.div
               key="riders"
               initial={{ y: "100%", opacity: 0 }}
@@ -168,7 +171,7 @@ export default function MapPage() {
             </motion.div>
           )}
 
-          {sheetState === "confirm" && (
+          {!isAuthModalOpen && sheetState === "confirm" && (
             <motion.div
               key="confirm"
               initial={{ y: "100%", opacity: 0 }}
