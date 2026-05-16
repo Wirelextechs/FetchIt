@@ -80,25 +80,31 @@ export default function RiderTrackingMap({
 
   // Attempt GPS on mount
   useEffect(() => {
+    let isMounted = true;
     if (!navigator.geolocation) {
-      setLocating(false);
-      return;
+      const timer = setTimeout(() => {
+        if (isMounted) setLocating(false);
+      }, 0);
+      return () => { isMounted = false; clearTimeout(timer); };
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
+        if (!isMounted) return;
         const coords: [number, number] = [pos.coords.latitude, pos.coords.longitude];
         setUserLocation(coords);
         setMapCenter(coords);
         onUserLocationFound?.(coords);
-        setLocating(false);
+        if (isMounted) setLocating(false);
       },
       () => {
+        if (!isMounted) return;
         // Permission denied or error — fall back to city center
         setLocating(false);
       },
       { timeout: 8000, maximumAge: 30000 }
     );
-  }, []);
+    return () => { isMounted = false; };
+  }, [onUserLocationFound]);
 
   // Generate dummy riders offset from the map center (user or city)
   const activeRiders = [

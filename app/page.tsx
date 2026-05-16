@@ -7,6 +7,7 @@ import { Search, MapPin, Navigation, ShieldCheck, Plus, Package, Bike, User, Loa
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
+import Image from "next/image";
 
 import { DEFAULT_CITY } from "@/config/cities";
 
@@ -295,8 +296,8 @@ function RiderCard({ id, name, type, i, onAction }: { id: string, name: string, 
   return (
     <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl hover:scale-[1.02] transition-all">
       <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 bg-slate-200 rounded-[24px] flex items-center justify-center overflow-hidden border-2 border-emerald-100 shadow-inner">
-          <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=rider-${i}`} alt="Avatar" className="w-full h-full object-cover" />
+        <div className="w-16 h-16 bg-slate-200 rounded-[24px] flex items-center justify-center overflow-hidden border-2 border-emerald-100 shadow-inner relative">
+          <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=rider-${i}`} alt="Avatar" fill sizes="64px" className="object-cover" />
         </div>
         <div>
           <h3 className="font-black text-slate-800 text-base">{name}</h3>
@@ -322,8 +323,8 @@ function ShopperCard({ name, i, onAction }: { name: string, i: number, onAction:
   return (
     <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 flex items-center justify-between hover:shadow-xl hover:scale-[1.02] transition-all">
       <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 bg-slate-200 rounded-[24px] flex items-center justify-center overflow-hidden border-2 border-emerald-100 shadow-inner">
-          <img src={`https://api.dicebear.com/7.x/notionists/svg?seed=shopper-${i}`} alt="Avatar" className="w-full h-full object-cover" />
+        <div className="w-16 h-16 bg-slate-200 rounded-[24px] flex items-center justify-center overflow-hidden border-2 border-emerald-100 shadow-inner relative">
+          <Image src={`https://api.dicebear.com/7.x/notionists/svg?seed=shopper-${i}`} alt="Avatar" fill sizes="64px" className="object-cover" />
         </div>
         <div>
           <h3 className="font-black text-slate-800 text-base">{name}</h3>

@@ -22,24 +22,26 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   const [isOnline, setIsOnline] = useState(false);
   const [earnings, setEarnings] = useState(0.00);
 
-  useEffect(() => {
-    if (user) {
-      fetchRiderStatus();
-    }
-  }, [user]);
-
-  const fetchRiderStatus = async () => {
+  const fetchRiderStatus = useCallback(async (userId: string, isActive: boolean) => {
     const { data } = await supabase
       .from('users')
       .select('is_online, wallet_balance')
-      .eq('id', user?.id)
+      .eq('id', userId)
       .single();
     
-    if (data) {
+    if (isActive && data) {
       setIsOnline(data.is_online);
       setEarnings(Number(data.wallet_balance || 0));
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    let isActive = true;
+    if (user) {
+      fetchRiderStatus(user.id, isActive);
+    }
+    return () => { isActive = false; };
+  }, [user, fetchRiderStatus]);
 
   const toggleOnline = async () => {
     const nextStatus = !isOnline;

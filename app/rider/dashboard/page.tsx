@@ -31,6 +31,8 @@ const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), {
   )
 });
 
+import { useCallback } from "react";
+
 export default function RiderDashboard() {
   const { user } = useAuth();
   const router = useRouter();
@@ -39,10 +41,37 @@ export default function RiderDashboard() {
   const [countdown, setCountdown] = useState(180);
   const [loading, setLoading] = useState(true);
 
+  const fetchGigs = useCallback(async (isCompany: boolean) => {
+    setLoading(true);
+    let query = supabase
+      .from('gigs')
+      .select('*')
+      .eq('status', 'pending');
+
+    if (!isCompany) {
+      query = query.lte('published_to_all_at', new Date().toISOString());
+    }
+
+    const { data } = await query.order('created_at', { ascending: false });
+
+    if (data) setGigs(data);
+    setLoading(false);
+  }, []);
+
+  const handleDecline = useCallback(async () => {
+    if (!directRequest) return;
+    await supabase
+      .from('direct_requests')
+      .update({ status: 'rejected' })
+      .eq('id', directRequest.id);
+    setDirectRequest(null);
+  }, [directRequest]);
+
   useEffect(() => {
     if (!user) return;
 
     let isCompany = false;
+    let isActive = true;
 
     const init = async () => {
       const { data: profile } = await supabase
@@ -51,6 +80,7 @@ export default function RiderDashboard() {
         .eq('id', user.id)
         .single();
       
+      if (!isActive) return;
       isCompany = profile?.is_company_rider || false;
       fetchGigs(isCompany);
 
@@ -101,8 +131,8 @@ export default function RiderDashboard() {
       };
     };
 
-    const cleanup = init();
-    return () => { cleanup.then(c => c && c()); };
+    init();
+    return () => { isActive = false; };
   }, [user]);
 
   useEffect(() => {
@@ -110,27 +140,13 @@ export default function RiderDashboard() {
     if (directRequest && countdown > 0) {
       timer = setInterval(() => setCountdown(c => c - 1), 1000);
     } else if (countdown === 0 && directRequest) {
-      handleDecline();
+      const run = async () => {
+        await handleDecline();
+      };
+      run();
     }
     return () => clearInterval(timer);
-  }, [directRequest, countdown]);
-
-  const fetchGigs = async (isCompany: boolean) => {
-    setLoading(true);
-    let query = supabase
-      .from('gigs')
-      .select('*')
-      .eq('status', 'pending');
-
-    if (!isCompany) {
-      query = query.lte('published_to_all_at', new Date().toISOString());
-    }
-
-    const { data } = await query.order('created_at', { ascending: false });
-    
-    if (data) setGigs(data);
-    setLoading(false);
-  };
+  }, [directRequest, countdown, handleDecline]);
 
   const handleAccept = async (gigId: string, isDirect: boolean) => {
     const table = isDirect ? 'direct_requests' : 'gigs';
@@ -145,15 +161,6 @@ export default function RiderDashboard() {
     } else {
       alert("Gig already taken or error: " + error.message);
     }
-  };
-
-  const handleDecline = async () => {
-    if (!directRequest) return;
-    await supabase
-      .from('direct_requests')
-      .update({ status: 'rejected' })
-      .eq('id', directRequest.id);
-    setDirectRequest(null);
   };
 
   return (

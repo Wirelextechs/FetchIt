@@ -16,6 +16,7 @@ import {
   Verified
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import Image from "next/image";
 
 export default function RiderProfile() {
   const { user, signOut } = useAuth();
@@ -49,11 +50,13 @@ export default function RiderProfile() {
 
           <div className="flex flex-col items-center text-center relative z-10">
             <div className="relative mb-6">
-              <div className="w-28 h-28 rounded-[40px] bg-slate-800 border-4 border-[#0F1115] overflow-hidden shadow-2xl">
-                <img 
+              <div className="w-28 h-28 rounded-[40px] bg-slate-800 border-4 border-[#0F1115] overflow-hidden shadow-2xl relative">
+                <Image
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email || 'rider'}`} 
                   alt="Avatar" 
-                  className="w-full h-full object-cover"
+                  fill
+                  sizes="112px"
+                  className="object-cover"
                 />
               </div>
               <button className="absolute -bottom-2 -right-2 w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center border-4 border-[#0F1115] text-white shadow-xl active:scale-90 transition-all">

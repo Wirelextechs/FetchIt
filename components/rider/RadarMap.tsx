@@ -23,8 +23,34 @@ const gigIcon = L.divIcon({
   iconAnchor: [12, 12],
 });
 
+import { useMemo } from "react";
+
 export default function RadarMap({ gigs }: { gigs: any[] }) {
   const center: [number, number] = [7.5833, -1.9333]; // Techiman center
+
+  const gigPositions = useMemo(() => {
+    return gigs.map(gig => {
+      // Deterministic "random" based on ID string to satisfy purity rules
+      const str = gig.id || 'fixed';
+      let hash = 0;
+      for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash |= 0;
+      }
+      const pseudoRandom = (seed: number) => {
+        const x = Math.sin(hash + seed) * 10000;
+        return x - Math.floor(x);
+      };
+
+      return {
+        id: gig.id,
+        position: [
+          7.5833 + (pseudoRandom(1) - 0.5) * 0.015,
+          -1.9333 + (pseudoRandom(2) - 0.5) * 0.015
+        ] as [number, number]
+      };
+    });
+  }, [gigs]);
 
   return (
     <div className="w-full h-full relative group">
@@ -48,24 +74,24 @@ export default function RadarMap({ gigs }: { gigs: any[] }) {
         <Marker position={center} icon={riderIcon} />
 
         {/* Gig Markers */}
-        {gigs.map((gig, idx) => (
-          <Marker 
-            key={gig.id || idx} 
-            position={[
-              7.5833 + (Math.random() - 0.5) * 0.015, 
-              -1.9333 + (Math.random() - 0.5) * 0.015
-            ]} 
-            icon={gigIcon}
-          >
-            <Popup className="custom-popup">
-              <div className="bg-slate-900 text-white p-3 rounded-xl border border-white/10 min-w-[120px]">
-                <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">New Gig</p>
-                <p className="font-bold text-xs mb-1 truncate">{gig.pickup_landmark}</p>
-                <p className="text-[10px] font-medium text-slate-400">GH₵ {Number(gig.offered_price).toFixed(2)}</p>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+        {gigPositions.map((gp, idx) => {
+          const gig = gigs[idx];
+          return (
+            <Marker
+              key={gp.id || idx}
+              position={gp.position}
+              icon={gigIcon}
+            >
+              <Popup className="custom-popup">
+                <div className="bg-slate-900 text-white p-3 rounded-xl border border-white/10 min-w-[120px]">
+                  <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">New Gig</p>
+                  <p className="font-bold text-xs mb-1 truncate">{gig.pickup_landmark}</p>
+                  <p className="text-[10px] font-medium text-slate-400">GH₵ {Number(gig.offered_price).toFixed(2)}</p>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
       
       {/* Map Vignette */}
