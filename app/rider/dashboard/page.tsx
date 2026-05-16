@@ -217,7 +217,7 @@ export default function RiderDashboard() {
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="fixed inset-0 z-[1000] bg-[#8B0000] flex flex-col p-8 overflow-hidden"
+            className="fixed inset-0 z-[9999] bg-[#8B0000] flex flex-col p-8 overflow-hidden"
           >
             {/* Takeover Background Effects */}
             <div className="absolute inset-0 pointer-events-none">

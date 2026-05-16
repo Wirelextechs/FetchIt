@@ -170,7 +170,7 @@ export default function ChatPage(props: { params: Promise<{ id: string }> }) {
   const isClosed = session?.status === 'closed';
 
   return (
-    <div className="flex flex-col h-screen bg-white max-w-md mx-auto shadow-xl relative overflow-hidden">
+    <div className="flex flex-col h-screen bg-white w-full max-w-4xl mx-auto shadow-xl relative overflow-hidden">
       {/* Header */}
       <header className="bg-slate-900 text-white p-4 sticky top-0 z-20 flex items-center justify-between">
         <div className="flex items-center space-x-3">
