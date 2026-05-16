@@ -81,10 +81,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#0F1115] text-white w-full shadow-2xl relative overflow-hidden font-sans">
+    <div className="h-screen flex flex-col bg-[#0F1115] text-white w-full relative overflow-hidden font-sans">
       {/* Top Header */}
-      <header className="p-6 pt-14 bg-slate-900/40 backdrop-blur-2xl border-b border-white/5 sticky top-0 z-[100]">
-        <div className="flex justify-between items-center mb-6">
+      <header className="p-6 pt-10 bg-slate-900/40 backdrop-blur-2xl border-b border-white/5 shrink-0 z-[100]">
+        <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-600'}`} />
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
@@ -114,20 +114,20 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
           </div>
           <button 
             onClick={triggerSOS}
-            className="w-14 h-14 bg-rose-500/10 border border-rose-500/20 rounded-3xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_10px_20px_rgba(244,63,94,0.1)] group"
+            className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_10px_20px_rgba(244,63,94,0.1)] group"
           >
-            <AlertOctagon className="w-7 h-7 group-active:scale-110 transition-transform" />
+            <AlertOctagon className="w-6 h-6 group-active:scale-110 transition-transform" />
           </button>
         </div>
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 pb-24 relative z-10">
+      <main className="flex-1 overflow-hidden relative z-10">
         {children}
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 w-full bg-[#0F1115]/90 backdrop-blur-2xl border-t border-white/5 safe-area-bottom z-[100] flex justify-center">
+      <nav className="bg-[#0F1115]/90 backdrop-blur-2xl border-t border-white/5 safe-area-bottom z-[100] flex justify-center shrink-0">
         <div className="w-full max-w-lg flex justify-around items-center h-20 px-4">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;

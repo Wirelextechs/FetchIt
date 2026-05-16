@@ -57,7 +57,7 @@ export default function AnalyticsPage() {
   };
 
   return (
-    <div className="p-6 space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto">
+    <div className="h-full overflow-y-auto p-6 pb-24 space-y-8 animate-in fade-in duration-700 max-w-7xl mx-auto custom-scrollbar">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left Column: Wallet and Chart */}
         <div className="space-y-8">

@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, Activity, Map, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function BottomNav() {
+export function BottomNav({ className }: { className?: string }) {
   const pathname = usePathname();
 
   const links = [
@@ -16,7 +16,7 @@ export function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 w-full bg-white border-t border-slate-200 safe-area-bottom z-40 flex justify-center">
+    <div className={cn("w-full bg-white border-t border-slate-200 safe-area-bottom z-40 flex justify-center", className || "fixed bottom-0")}>
       <div className="flex justify-around items-center p-2 w-full max-w-lg">
         {links.map((link) => {
           const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== "/");

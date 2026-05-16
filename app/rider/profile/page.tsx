@@ -27,7 +27,7 @@ export default function RiderProfile() {
   ];
 
   return (
-    <div className="p-6 space-y-8 animate-in slide-in-from-bottom-4 duration-700">
+    <div className="h-full overflow-y-auto p-6 pb-24 space-y-8 animate-in slide-in-from-bottom-4 duration-700 custom-scrollbar">
       {/* Rider ID Card */}
       <div className="relative pt-6">
         <motion.div 

@@ -277,7 +277,7 @@ export default function HomePage() {
         )}
       </AnimatePresence>
 
-      <div className="fixed bottom-24 right-6 z-50">
+      <div className="fixed bottom-28 right-6 z-50">
         <button 
           onClick={handlePostGig}
           className="w-16 h-16 bg-emerald-600 text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-all group"

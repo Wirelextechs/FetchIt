@@ -98,7 +98,7 @@ export default function MapPage() {
       </div>
 
       {/* ── 3. Bottom Sheet ── */}
-      <div className={`absolute bottom-16 left-0 right-0 z-[500] px-3 transition-opacity duration-300 ${isAuthModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`absolute bottom-28 left-0 right-0 z-[500] px-3 transition-opacity duration-300 ${isAuthModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         <AnimatePresence mode="wait">
           {!isAuthModalOpen && sheetState === "riders" && (
             <motion.div
