@@ -38,7 +38,16 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     let isActive = true;
     if (user) {
-      fetchRiderStatus(user.id, isActive);
+      // Small delay to avoid synchronous state update during render cycle
+      const timeoutId = setTimeout(() => {
+        if (isActive) {
+          fetchRiderStatus(user.id, isActive);
+        }
+      }, 0);
+      return () => {
+        isActive = false;
+        clearTimeout(timeoutId);
+      };
     }
     return () => { isActive = false; };
   }, [user, fetchRiderStatus]);
@@ -83,42 +92,42 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#0F1115] text-white w-full relative overflow-hidden font-sans">
+    <div className="h-screen flex flex-col bg-[#09090b] text-white w-full relative overflow-hidden font-sans">
       {/* Top Header */}
-      <header className="p-6 pt-10 bg-slate-900/40 backdrop-blur-2xl border-b border-white/5 shrink-0 z-[100]">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-600'}`} />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              {isOnline ? 'Active on Radar' : 'System Offline'}
+      <header className="p-8 pt-12 bg-slate-900/20 backdrop-blur-3xl border-b border-white/5 shrink-0 z-[100]">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-700'}`} />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+              {isOnline ? 'Live Command' : 'System Standby'}
             </span>
           </div>
           <button 
             onClick={toggleOnline}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all duration-500 ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all duration-500 border ${
               isOnline 
-                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' 
-                : 'bg-slate-800 text-slate-400 border border-white/5'
+                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                : 'glass text-slate-400 border-white/5'
             }`}
           >
-            <Power className="w-3 h-3" />
-            {isOnline ? 'Go Offline' : 'Go Online'}
+            <Power className="w-3.5 h-3.5" />
+            {isOnline ? 'Signal Off' : 'Engage'}
           </button>
         </div>
 
         <div className="flex justify-between items-end">
           <div>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] mb-1">Total Payout Balance</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-bold text-emerald-500">GH₵</span>
-              <span className="text-3xl font-black tracking-tighter">{earnings.toFixed(2)}</span>
+            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Command Center Balance</p>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs font-black text-emerald-500">GHS</span>
+              <span className="text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">{earnings.toFixed(2)}</span>
             </div>
           </div>
           <button 
             onClick={triggerSOS}
-            className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_10px_20px_rgba(244,63,94,0.1)] group"
+            className="w-14 h-14 glass-dark border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_0_30px_rgba(244,63,94,0.15)] group"
           >
-            <AlertOctagon className="w-6 h-6 group-active:scale-110 transition-transform" />
+            <AlertOctagon className="w-7 h-7 group-active:scale-110 transition-transform" />
           </button>
         </div>
       </header>

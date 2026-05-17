@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Activity, Map, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 export function BottomNav({ className }: { className?: string }) {
   const pathname = usePathname();
@@ -16,8 +17,8 @@ export function BottomNav({ className }: { className?: string }) {
   ];
 
   return (
-    <div className={cn("w-full bg-white border-t border-slate-200 safe-area-bottom z-40 flex justify-center", className || "fixed bottom-0")}>
-      <div className="flex justify-around items-center p-2 w-full max-w-lg">
+    <div className={cn("w-full px-6 pb-6 safe-area-bottom z-40 flex justify-center pointer-events-none", className || "fixed bottom-0")}>
+      <div className="glass-dark rounded-[32px] flex justify-around items-center p-2 w-full max-w-md pointer-events-auto shadow-2xl">
         {links.map((link) => {
           const isActive = pathname === link.href || (pathname.startsWith(link.href) && link.href !== "/");
           const Icon = link.icon;
@@ -26,12 +27,18 @@ export function BottomNav({ className }: { className?: string }) {
               key={link.href}
               href={link.href}
               className={cn(
-                "flex flex-col items-center justify-center p-2 rounded-xl transition-colors w-16",
-                isActive ? "text-emerald-600" : "text-slate-400 hover:text-slate-600 hover:bg-slate-50"
+                "flex flex-col items-center justify-center p-2 rounded-2xl relative transition-all duration-300 w-16",
+                isActive ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"
               )}
             >
-              <Icon className={cn("w-6 h-6 mb-1", isActive && "fill-emerald-100")} />
-              <span className="text-[10px] font-medium">{link.label}</span>
+              {isActive && (
+                <motion.div
+                  layoutId="nav-pill"
+                  className="absolute inset-0 bg-emerald-500/10 rounded-2xl border border-emerald-500/20"
+                />
+              )}
+              <Icon className={cn("w-5 h-5 mb-1 z-10 transition-transform", isActive && "scale-110")} />
+              <span className="text-[8px] font-black uppercase tracking-tighter z-10">{link.label}</span>
             </Link>
           );
         })}

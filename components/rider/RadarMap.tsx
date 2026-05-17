@@ -30,13 +30,18 @@ export default function RadarMap({ gigs }: { gigs: any[] }) {
 
   const gigPositions = useMemo(() => {
     return gigs.map(gig => {
-      // Deterministic "random" based on ID string to satisfy purity rules
-      const str = gig.id || 'fixed';
-      let hash = 0;
-      for (let i = 0; i < str.length; i++) {
-        hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        hash |= 0;
-      }
+      // Deterministic hashing function
+      const getHash = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          hash = ((hash << 5) - hash) + str.charCodeAt(i);
+          hash |= 0;
+        }
+        return hash;
+      };
+
+      const hash = getHash(String(gig.id || 'fixed'));
+
       const pseudoRandom = (seed: number) => {
         const x = Math.sin(hash + seed) * 10000;
         return x - Math.floor(x);
@@ -57,12 +62,12 @@ export default function RadarMap({ gigs }: { gigs: any[] }) {
       <MapContainer 
         center={center} 
         zoom={14} 
-        className="w-full h-full grayscale-[0.8] invert-[0.9] hue-rotate-[180deg] brightness-[0.7]"
+        className="w-full h-full"
         zoomControl={false}
       >
         <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; OpenStreetMap'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          attribution='&copy; OpenStreetMap contributors &copy; CARTO'
         />
         
         {/* Rider's Pulse */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -51,8 +51,8 @@ function FlyToCenter({ center }: { center: [number, number] }) {
 // ── Tile Layer URLs ──────────────────────────────────────────────
 const TILE_LAYERS = {
   standard: {
-    url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     maxZoom: 19,
   },
   satellite: {
@@ -107,11 +107,12 @@ export default function RiderTrackingMap({
   }, [onUserLocationFound]);
 
   // Generate dummy riders offset from the map center (user or city)
-  const activeRiders = [
+  // Use useMemo to prevent re-calculating on every render which causes jitter
+  const activeRiders = useMemo(() => [
     { id: 1, type: "company", lat: mapCenter[0] + 0.002, lng: mapCenter[1] + 0.001, name: "Kwame A.", eta: "2 min" },
     { id: 2, type: "individual", lat: mapCenter[0] - 0.0015, lng: mapCenter[1] - 0.0022, name: "Ama B.", eta: "5 min" },
     { id: 3, type: "company", lat: mapCenter[0] + 0.003, lng: mapCenter[1] - 0.0028, name: "Kofi C.", eta: "4 min" },
-  ];
+  ], [mapCenter]);
 
   const layer = isSatellite ? TILE_LAYERS.satellite : TILE_LAYERS.standard;
 
