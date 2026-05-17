@@ -104,28 +104,28 @@ export default function RiderGigsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-100 max-w-md mx-auto pb-20">
-      <header className="bg-slate-900 px-4 py-6 text-white sticky top-0 z-20 shadow-md">
+    <div className="flex flex-col min-h-screen bg-background max-w-md mx-auto pb-20">
+      <header className="bg-card px-4 py-6 text-foreground sticky top-0 z-20 shadow-sm border-b border-border">
         <div className="flex justify-between items-center mb-4">
           <div>
             <h1 className="text-xl font-bold flex items-center">
               Available Gigs
             </h1>
-            <p className="text-xs text-slate-400 mt-1 flex items-center">
+            <p className="text-xs text-muted-foreground mt-1 flex items-center">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
               Looking for jobs in Techiman
             </p>
           </div>
-          <div className="bg-slate-800 p-2 rounded-xl">
-            <ShieldCheck className="w-6 h-6 text-emerald-400" />
+          <div className="bg-muted p-2 rounded-xl">
+            <ShieldCheck className="w-6 h-6 text-emerald-500" />
           </div>
         </div>
         
-        <div className="flex bg-slate-800 p-1 rounded-xl">
-          <button className="flex-1 bg-slate-700 text-white text-sm font-semibold py-2 rounded-lg shadow-sm">
+        <div className="flex bg-muted p-1 rounded-xl border border-border">
+          <button className="flex-1 bg-card text-foreground text-sm font-semibold py-2 rounded-lg shadow-sm border border-border">
             All Feed
           </button>
-          <button className="flex-1 text-slate-400 text-sm font-semibold py-2 hover:text-slate-300 transition-colors">
+          <button className="flex-1 text-muted-foreground text-sm font-semibold py-2 hover:text-foreground transition-colors">
             Priority (5m)
           </button>
         </div>
@@ -133,30 +133,30 @@ export default function RiderGigsPage() {
 
       <div className="p-4 space-y-4 flex-1">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin mb-4" />
             <p>Scanning for gigs...</p>
           </div>
         ) : gigs.length > 0 ? (
           gigs.map((gig) => (
-            <div key={gig.id} className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm relative overflow-hidden">
+            <div key={gig.id} className="bg-card border border-border rounded-2xl p-4 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 right-0 w-2 h-full bg-emerald-500"></div>
               <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center space-x-1.5 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-100 w-max mb-2">
-                  <Timer className="w-3 h-3 text-rose-600" />
-                  <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wide">New Gig</span>
+                <div className="flex items-center space-x-1.5 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20 w-max mb-2">
+                  <Timer className="w-3 h-3 text-rose-500" />
+                  <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wide">New Gig</span>
                 </div>
-                <span className="text-xl font-bold text-slate-800">GH₵{gig.offered_price}</span>
+                <span className="text-xl font-bold text-foreground">GH₵{gig.offered_price}</span>
               </div>
               
-              <h3 className="font-bold text-slate-800 text-base mb-3 pr-4">{gig.description}</h3>
+              <h3 className="font-bold text-foreground text-base mb-3 pr-4">{gig.description}</h3>
               
               <div className="space-y-2 mb-4">
                 <div className="flex items-start">
-                  <MapPin className="w-4 h-4 text-emerald-600 mr-2 mt-0.5" />
+                  <MapPin className="w-4 h-4 text-emerald-500 mr-2 mt-0.5" />
                   <div>
-                    <p className="text-xs text-slate-500 font-medium">Pickup</p>
-                    <p className="text-sm font-semibold text-slate-700">{gig.pickup_landmark}</p>
+                    <p className="text-xs text-muted-foreground font-medium">Pickup</p>
+                    <p className="text-sm font-semibold text-foreground/70">{gig.pickup_landmark}</p>
                   </div>
                 </div>
               </div>
@@ -178,7 +178,7 @@ export default function RiderGigsPage() {
             </div>
           ))
         ) : (
-          <div className="text-center py-20 text-slate-400">
+          <div className="text-center py-20 text-muted-foreground">
             <p>No available gigs right now.</p>
             <p className="text-sm">We'll notify you when new ones arrive!</p>
           </div>

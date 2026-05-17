@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { BottomNav } from "@/components/layout/BottomNav";
-import { Search, MapPin, Navigation, ShieldCheck, Plus, Package, Bike, User, Loader2, Info } from "lucide-react";
+import { Search, MapPin, Navigation, ShieldCheck, Plus, Package, Bike, User, Loader2, Info, Sun, Moon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/lib/supabase/client";
@@ -15,6 +16,7 @@ type ServiceMode = "delivery" | "shopping";
 
 export default function HomePage() {
   const { requireAuth, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const [serviceMode, setServiceMode] = useState<ServiceMode>("delivery");
   
@@ -72,10 +74,10 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#09090b] w-full pb-20 relative">
+    <div className="flex flex-col min-h-screen bg-background w-full pb-20 relative">
       <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
         {/* Header Section */}
-        <div className="px-6 pt-16 pb-12 text-white relative overflow-hidden">
+        <div className="px-6 pt-16 pb-12 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full -mr-48 -mt-48"></div>
           <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[120px] rounded-full -ml-24 -mb-24"></div>
 
@@ -85,26 +87,34 @@ export default function HomePage() {
                 <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
                   <Package className="w-4 h-4 text-white" />
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">FetchIt Techiman</span>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">FetchIt Techiman</span>
               </div>
-              <h1 className="text-3xl font-black tracking-tighter flex items-center gap-2">
+              <h1 className="text-3xl font-black tracking-tighter flex items-center gap-2 text-foreground">
                 Everywhere, <span className="text-emerald-500">Fast.</span>
               </h1>
             </div>
-            <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-white/10 shadow-xl group cursor-pointer hover:border-emerald-500/30 transition-all">
-              <span className="font-black text-emerald-400 group-hover:scale-110 transition-transform">
-                {user ? user.email?.charAt(0).toUpperCase() : "F"}
-              </span>
+            <div className="flex gap-3">
+              <button
+                onClick={toggleTheme}
+                className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-border shadow-xl hover:border-emerald-500/30 transition-all text-foreground"
+              >
+                {theme === 'dark' ? <Sun className="w-5 h-5 text-emerald-400" /> : <Moon className="w-5 h-5 text-emerald-600" />}
+              </button>
+              <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-border shadow-xl group cursor-pointer hover:border-emerald-500/30 transition-all">
+                <span className="font-black text-emerald-500 group-hover:scale-110 transition-transform">
+                  {user ? user.email?.charAt(0).toUpperCase() : "F"}
+                </span>
+              </div>
             </div>
           </div>
           
           <div className="mt-10 relative z-10 max-w-2xl">
             <div className="relative group">
-              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
+              <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
               <input 
                 type="text" 
                 placeholder="Where should we pick up or shop?"
-                className="w-full glass text-white rounded-2xl py-5 pl-14 pr-6 outline-none font-bold placeholder:text-slate-600 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm shadow-2xl"
+                className="w-full glass text-foreground rounded-2xl py-5 pl-14 pr-6 outline-none font-bold placeholder:text-muted-foreground focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm shadow-2xl"
               />
             </div>
           </div>
@@ -112,13 +122,13 @@ export default function HomePage() {
 
         {/* Service Toggle */}
         <div className="px-6 py-4 flex flex-col gap-8">
-          <div className="glass-dark p-1.5 rounded-[32px] flex items-center max-w-xl self-center w-full shadow-2xl border-white/5">
+          <div className="glass p-1.5 rounded-[32px] flex items-center max-w-xl self-center w-full shadow-2xl border-border/50">
             <button 
               onClick={() => setServiceMode("delivery")}
               className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[26px] font-black text-[10px] uppercase tracking-widest transition-all duration-500 ${
                 serviceMode === "delivery" 
                   ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-                  : "text-slate-500 hover:text-slate-300"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Bike className="w-4 h-4" />
@@ -129,7 +139,7 @@ export default function HomePage() {
               className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[26px] font-black text-[10px] uppercase tracking-widest transition-all duration-500 ${
                 serviceMode === "shopping" 
                   ? "bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.4)]"
-                  : "text-slate-500 hover:text-slate-300"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <User className="w-4 h-4" />
@@ -148,7 +158,7 @@ export default function HomePage() {
               <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-500 shrink-0">
                 <Info className="w-6 h-6" />
               </div>
-              <p className="text-slate-300 text-xs font-bold leading-relaxed">
+              <p className="text-muted-foreground text-xs font-bold leading-relaxed">
                 {serviceMode === "delivery" 
                   ? "Instant logistics. Hire a verified rider to transport goods or handle errands across the city."
                   : "Expert shopping. Connect with vetted agents who know the local markets and deliver quality goods."
@@ -161,10 +171,10 @@ export default function HomePage() {
         {/* List Section */}
         <div className="px-6 pb-24 flex-1">
           <div className="flex justify-between items-end mb-8">
-            <h2 className="text-xl font-black text-white tracking-tight">
+            <h2 className="text-xl font-black text-foreground tracking-tight">
               {serviceMode === "delivery" ? "Active Dispatchers" : "Expert Agents"}
             </h2>
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">Live Now</span>
+            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">Live Now</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -217,52 +227,52 @@ export default function HomePage() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsModalOpen(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/40 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              className="relative w-full max-w-md glass-dark rounded-t-[40px] overflow-hidden p-8 pt-10 shadow-2xl border-t border-white/10"
+              className="relative w-full max-w-md glass rounded-t-[40px] overflow-hidden p-8 pt-10 shadow-2xl border-t border-border"
             >
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-white/10 rounded-full" />
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1.5 bg-muted-foreground/20 rounded-full" />
               
               <div className="flex items-center gap-5 mb-10">
                 <div className="w-20 h-20 glass rounded-3xl flex items-center justify-center border-emerald-500/20">
                   <Bike className="w-10 h-10 text-emerald-500" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-black text-white tracking-tight">Request {selectedRider?.name}</h2>
+                  <h2 className="text-2xl font-black text-foreground tracking-tight">Request {selectedRider?.name}</h2>
                   <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Direct Dispatch</p>
                 </div>
               </div>
 
               <div className="space-y-8">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Pickup Point</label>
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1">Pickup Point</label>
                   <input 
                     type="text" 
                     value={pickupLandmark}
                     onChange={(e) => setPickupLandmark(e.target.value)}
                     placeholder="e.g. Near Top Oil Techiman"
-                    className="w-full glass border-none rounded-2xl py-5 px-6 text-white font-bold placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full glass border-none rounded-2xl py-5 px-6 text-foreground font-bold placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Dropoff Point</label>
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1">Dropoff Point</label>
                   <input 
                     type="text" 
                     value={dropoffLandmark}
                     onChange={(e) => setDropoffLandmark(e.target.value)}
                     placeholder="e.g. Krobo Gate 3"
-                    className="w-full glass border-none rounded-2xl py-5 px-6 text-white font-bold placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full glass border-none rounded-2xl py-5 px-6 text-foreground font-bold placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
-                <div className="glass p-6 rounded-3xl flex justify-between items-center border-white/5">
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Estimated Fare</span>
-                  <span className="text-3xl font-black text-emerald-400">
+                <div className="glass p-6 rounded-3xl flex justify-between items-center border-border">
+                  <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Estimated Fare</span>
+                  <span className="text-3xl font-black text-emerald-500">
                     GHS {selectedRider?.type === 'company' ? '25.00' : '15.00'}
                   </span>
                 </div>
@@ -270,12 +280,12 @@ export default function HomePage() {
                 <button 
                   onClick={handleConfirmRequest}
                   disabled={!pickupLandmark || !dropoffLandmark || submitting}
-                  className="w-full bg-emerald-500 text-white font-black py-6 rounded-[28px] shadow-[0_20px_40px_rgba(16,185,129,0.2)] flex items-center justify-center gap-3 disabled:glass disabled:text-slate-600 disabled:shadow-none transition-all active:scale-95"
+                  className="w-full bg-emerald-500 text-white font-black py-6 rounded-[28px] shadow-[0_20px_40px_rgba(16,185,129,0.2)] flex items-center justify-center gap-3 disabled:glass disabled:text-muted-foreground disabled:shadow-none transition-all active:scale-95"
                 >
                   {submitting ? <Loader2 className="w-6 h-6 animate-spin" /> : <ShieldCheck className="w-6 h-6" />}
                   Confirm Direct Request
                 </button>
-                <p className="text-[10px] text-center text-slate-400 font-medium px-4">
+                <p className="text-[10px] text-center text-muted-foreground font-medium px-4">
                   Rider has 3 minutes to accept this request before it expires.
                 </p>
               </div>
@@ -302,13 +312,13 @@ function RiderCard({ id, name, type, i, onAction }: { id: string, name: string, 
   return (
     <div className="glass p-6 rounded-[32px] flex items-center justify-between hover:bg-white/5 transition-all group">
       <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center overflow-hidden border-white/10 shadow-inner relative group-hover:scale-110 transition-transform">
+        <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center overflow-hidden border-border shadow-inner relative group-hover:scale-110 transition-transform">
           <Image src={`https://api.dicebear.com/7.x/avataaars/svg?seed=rider-${i}`} alt="Avatar" fill sizes="64px" className="object-cover" />
         </div>
         <div>
-          <h3 className="font-black text-white text-base">{name}</h3>
+          <h3 className="font-black text-foreground text-base">{name}</h3>
           <div className={`flex items-center text-[9px] font-black uppercase tracking-widest px-3 py-1 rounded-full mt-2 w-max ${
-            type === 'company' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+            type === 'company' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border border-blue-500/20'
           }`}>
             {type === 'company' ? <ShieldCheck className="w-3 h-3 mr-1.5" /> : <User className="w-3 h-3 mr-1.5" />}
             {type === 'company' ? 'Verified Partner' : 'Freelance'}
@@ -317,7 +327,7 @@ function RiderCard({ id, name, type, i, onAction }: { id: string, name: string, 
       </div>
       <button 
         onClick={onAction}
-        className="glass-dark text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl hover:bg-emerald-600 transition-all active:scale-95 border-white/10"
+        className="glass text-foreground text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all active:scale-95 border-border"
       >
         Select
       </button>
@@ -329,12 +339,12 @@ function ShopperCard({ name, i, onAction }: { name: string, i: number, onAction:
   return (
     <div className="glass p-6 rounded-[32px] flex items-center justify-between hover:bg-white/5 transition-all group">
       <div className="flex items-center space-x-4">
-        <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center overflow-hidden border-white/10 shadow-inner relative group-hover:scale-110 transition-transform">
+        <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center overflow-hidden border-border shadow-inner relative group-hover:scale-110 transition-transform">
           <Image src={`https://api.dicebear.com/7.x/notionists/svg?seed=shopper-${i}`} alt="Avatar" fill sizes="64px" className="object-cover" />
         </div>
         <div>
-          <h3 className="font-black text-white text-base">{name}</h3>
-          <div className="flex items-center text-emerald-400 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full mt-2 w-max border border-emerald-500/20">
+          <h3 className="font-black text-foreground text-base">{name}</h3>
+          <div className="flex items-center text-emerald-500 text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 px-3 py-1 rounded-full mt-2 w-max border border-emerald-500/20">
             <ShieldCheck className="w-3 h-3 mr-1.5" />
             Market Expert
           </div>
@@ -342,7 +352,7 @@ function ShopperCard({ name, i, onAction }: { name: string, i: number, onAction:
       </div>
       <button 
         onClick={onAction}
-        className="glass-dark text-white text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl hover:bg-emerald-600 transition-all active:scale-95 border-white/10"
+        className="glass text-foreground text-[10px] font-black uppercase tracking-widest px-6 py-3 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all active:scale-95 border-border"
       >
         Connect
       </button>

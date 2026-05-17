@@ -24,8 +24,10 @@ const gigIcon = L.divIcon({
 });
 
 import { useMemo } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function RadarMap({ gigs }: { gigs: any[] }) {
+  const { theme } = useTheme();
   const center: [number, number] = [7.5833, -1.9333]; // Techiman center
 
   const gigPositions = useMemo(() => {
@@ -66,7 +68,10 @@ export default function RadarMap({ gigs }: { gigs: any[] }) {
         zoomControl={false}
       >
         <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          url={theme === 'dark'
+            ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+            : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+          }
           attribution='&copy; OpenStreetMap contributors &copy; CARTO'
         />
         
@@ -88,10 +93,10 @@ export default function RadarMap({ gigs }: { gigs: any[] }) {
               icon={gigIcon}
             >
               <Popup className="custom-popup">
-                <div className="bg-slate-900 text-white p-3 rounded-xl border border-white/10 min-w-[120px]">
+                <div className="bg-card text-foreground p-3 rounded-xl border border-border min-w-[120px]">
                   <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">New Gig</p>
                   <p className="font-bold text-xs mb-1 truncate">{gig.pickup_landmark}</p>
-                  <p className="text-[10px] font-medium text-slate-400">GH₵ {Number(gig.offered_price).toFixed(2)}</p>
+                  <p className="text-[10px] font-medium text-muted-foreground">GH₵ {Number(gig.offered_price).toFixed(2)}</p>
                 </div>
               </Popup>
             </Marker>

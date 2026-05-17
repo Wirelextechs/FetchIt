@@ -156,7 +156,7 @@ export default function ChatPage(props: { params: Promise<{ id: string }> }) {
 
   if (loading) {
     return (
-      <div className="flex flex-col h-screen bg-white max-w-md mx-auto items-center justify-center text-slate-400">
+      <div className="flex flex-col h-screen bg-background max-w-md mx-auto items-center justify-center text-muted-foreground">
         <Loader2 className="w-8 h-8 animate-spin mb-4" />
         <p>Opening chat...</p>
       </div>
@@ -170,11 +170,11 @@ export default function ChatPage(props: { params: Promise<{ id: string }> }) {
   const isClosed = session?.status === 'closed';
 
   return (
-    <div className="flex flex-col h-screen bg-white w-full max-w-4xl mx-auto shadow-xl relative overflow-hidden">
+    <div className="flex flex-col h-screen bg-background w-full max-w-4xl mx-auto shadow-xl relative overflow-hidden">
       {/* Header */}
-      <header className="bg-slate-900 text-white p-4 sticky top-0 z-20 flex items-center justify-between">
+      <header className="bg-card text-foreground p-4 sticky top-0 z-20 flex items-center justify-between border-b border-border">
         <div className="flex items-center space-x-3">
-          <Link href="/user/activity" className="p-2 -ml-2 hover:bg-slate-800 rounded-full transition-colors">
+          <Link href="/user/activity" className="p-2 -ml-2 hover:bg-muted rounded-full transition-colors">
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div>
@@ -182,16 +182,16 @@ export default function ChatPage(props: { params: Promise<{ id: string }> }) {
               {isUser ? "Gig Rider" : "Customer"}
             </h1>
             <p className="text-xs text-emerald-400 flex items-center">
-              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isClosed ? 'bg-slate-400' : 'bg-emerald-400 animate-pulse'}`}></span>
+              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isClosed ? 'bg-muted-foreground' : 'bg-emerald-400 animate-pulse'}`}></span>
               {isClosed ? 'Session Closed' : 'Online'} • {session?.gigs?.description || "Gig Chat"}
             </p>
           </div>
         </div>
         <div className="flex items-center space-x-1">
-          <button className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+          <button className="p-2 hover:bg-muted rounded-full transition-colors">
             <Phone className="w-5 h-5" />
           </button>
-          <button className="p-2 hover:bg-slate-800 rounded-full transition-colors">
+          <button className="p-2 hover:bg-muted rounded-full transition-colors">
             <MoreVertical className="w-5 h-5" />
           </button>
         </div>
@@ -199,11 +199,11 @@ export default function ChatPage(props: { params: Promise<{ id: string }> }) {
 
       {/* Closed Banner */}
       {isClosed && (
-        <div className="bg-slate-100 border-b border-slate-200 px-6 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-slate-500" />
+        <div className="bg-muted border-b border-border px-6 py-3 flex items-center gap-3">
+          <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center shrink-0">
+            <CheckCircle2 className="w-5 h-5 text-muted-foreground" />
           </div>
-          <p className="text-xs font-bold text-slate-600">
+          <p className="text-xs font-bold text-muted-foreground">
             This service is completed. Chat is closed.
           </p>
         </div>

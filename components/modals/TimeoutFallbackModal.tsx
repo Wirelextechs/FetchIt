@@ -20,20 +20,20 @@ export function TimeoutFallbackModal({ isOpen, onClose, onAccept, riderName }: T
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/80 backdrop-blur-md"
+            className="absolute inset-0 bg-black/40 backdrop-blur-md"
           />
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="relative w-full max-w-sm bg-white rounded-[32px] overflow-hidden p-8 shadow-2xl"
+            className="relative w-full max-w-sm glass rounded-[32px] overflow-hidden p-8 shadow-2xl border-border"
           >
-            <div className="w-16 h-16 bg-rose-50 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-rose-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
               <AlertTriangle className="w-8 h-8 text-rose-500" />
             </div>
             
-            <h2 className="text-xl font-black text-slate-800 text-center mb-2">Rider Unavailable</h2>
-            <p className="text-sm text-slate-500 text-center font-medium leading-relaxed mb-8">
+            <h2 className="text-xl font-black text-foreground text-center mb-2">Rider Unavailable</h2>
+            <p className="text-sm text-muted-foreground text-center font-medium leading-relaxed mb-8">
               {riderName} didn't respond in time. Do you want to post this as an open gig to all nearby riders?
             </p>
 
@@ -47,7 +47,7 @@ export function TimeoutFallbackModal({ isOpen, onClose, onAccept, riderName }: T
               </button>
               <button 
                 onClick={onClose}
-                className="w-full bg-slate-50 text-slate-400 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all hover:bg-slate-100"
+                className="w-full bg-muted text-muted-foreground font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all hover:bg-muted/80"
               >
                 Cancel
               </button>

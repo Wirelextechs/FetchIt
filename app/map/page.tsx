@@ -16,7 +16,7 @@ const RiderTrackingMap = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="absolute inset-0 bg-[#0a0a0a] flex items-center justify-center">
+      <div className="absolute inset-0 bg-background flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-amber-400/50 border-t-amber-400 rounded-full animate-spin" />
       </div>
     ),
@@ -73,7 +73,7 @@ export default function MapPage() {
       <div className={`absolute top-0 left-0 right-0 z-[500] p-4 space-y-3 transition-opacity duration-300 ${isAuthModalOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
         {/* City badge + satellite toggle */}
         <div className="flex items-center justify-between gap-2">
-          <div className="glass-dark rounded-full px-4 py-2 text-white text-xs font-bold flex items-center gap-2">
+          <div className="glass rounded-full px-4 py-2 text-foreground text-xs font-bold flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             {city.name} • {RIDERS.length} riders active
           </div>
@@ -81,10 +81,10 @@ export default function MapPage() {
           {/* Satellite Toggle */}
           <button
             onClick={() => setIsSatellite((v) => !v)}
-            className={`glass-dark rounded-full px-3 py-2 text-xs font-bold flex items-center gap-1.5 transition-all border-white/10 ${
+            className={`glass rounded-full px-3 py-2 text-xs font-bold flex items-center gap-1.5 transition-all border-border ${
               isSatellite
                 ? "bg-emerald-500/80 border-emerald-400/50 text-white shadow-[0_0_15px_rgba(16,185,129,0.3)]"
-                : "text-white"
+                : "text-foreground"
             }`}
           >
             {isSatellite ? "🗺 Street" : "🛰 Satellite"}
@@ -114,16 +114,16 @@ export default function MapPage() {
                   initial={{ opacity: 0, y: 20, scale: 0.9 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 20, scale: 0.9 }}
-                  className="glass-dark rounded-3xl p-4 shadow-2xl w-[320px] mb-2"
+                  className="glass rounded-3xl p-4 shadow-2xl w-[320px] mb-2"
                 >
-                  <h2 className="text-white font-bold text-sm mb-3 px-1">
+                  <h2 className="text-foreground font-bold text-sm mb-3 px-1">
                     Nearby Riders
                   </h2>
                   <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1 custom-scrollbar">
                     {RIDERS.map((rider) => (
                       <div
                         key={rider.id}
-                        className="flex items-center justify-between bg-white/5 border border-white/5 rounded-2xl p-3 hover:bg-white/10 transition-colors cursor-pointer"
+                        className="flex items-center justify-between bg-card/50 border border-border rounded-2xl p-3 hover:bg-card/80 transition-colors cursor-pointer"
                         onClick={handleRequestRider}
                       >
                         <div className="flex items-center gap-3">
@@ -133,9 +133,9 @@ export default function MapPage() {
                             <Navigation className={`w-4 h-4 ${rider.type === "company" ? "text-emerald-400" : "text-blue-400"}`} />
                           </div>
                           <div>
-                            <div className="text-white font-bold text-xs">{rider.name}</div>
+                            <div className="text-foreground font-bold text-xs">{rider.name}</div>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className="text-white/40 text-[10px]">{rider.eta}</span>
+                              <span className="text-muted-foreground text-[10px]">{rider.eta}</span>
                               <span className="flex items-center gap-0.5 text-emerald-400 text-[10px] font-bold">
                                 <Star className="w-2.5 h-2.5 fill-emerald-400" />
                                 {rider.rating}
@@ -154,8 +154,8 @@ export default function MapPage() {
 
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all active:scale-90 border border-white/10 ${
-                  isExpanded ? "bg-white text-slate-900" : "glass-dark text-emerald-400"
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all active:scale-90 border border-border ${
+                  isExpanded ? "bg-foreground text-background" : "glass text-emerald-400"
                 }`}
               >
                 {isExpanded ? (
@@ -165,7 +165,7 @@ export default function MapPage() {
                 ) : (
                   <div className="relative">
                     <Navigation className="w-6 h-6 fill-emerald-400" />
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-[#09090b]">
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-500 text-white text-[9px] font-black rounded-full flex items-center justify-center border-2 border-background">
                       {RIDERS.length}
                     </span>
                   </div>
@@ -181,26 +181,26 @@ export default function MapPage() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: 20, opacity: 0 }}
-                className="glass-dark rounded-[32px] p-6 shadow-2xl max-w-lg mx-auto border-white/10"
+                className="glass rounded-[32px] p-6 shadow-2xl max-w-lg mx-auto border-border"
               >
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center border border-emerald-500/30">
                     <MapPin className="w-6 h-6 text-emerald-400" />
                   </div>
                   <div>
-                    <h2 className="text-white font-black text-lg tracking-tight">Confirm Pickup</h2>
-                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider">Techiman Service Area</p>
+                    <h2 className="text-foreground font-black text-lg tracking-tight">Confirm Pickup</h2>
+                    <p className="text-muted-foreground text-[10px] font-bold uppercase tracking-wider">Techiman Service Area</p>
                   </div>
                 </div>
 
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 mb-6">
-                  <p className="text-white text-sm font-bold leading-relaxed">{confirmedLocation}</p>
+                <div className="bg-card/50 border border-border rounded-2xl p-4 mb-6">
+                  <p className="text-foreground text-sm font-bold leading-relaxed">{confirmedLocation}</p>
                 </div>
 
                 <div className="flex gap-3">
                   <button
                     onClick={() => setSheetState("riders")}
-                    className="flex-1 py-4 rounded-2xl glass border-white/10 text-white text-xs font-black uppercase tracking-widest hover:bg-white/5 transition-all"
+                    className="flex-1 py-4 rounded-2xl glass border-border text-foreground text-xs font-black uppercase tracking-widest hover:bg-card/50 transition-all"
                   >
                     Change
                   </button>

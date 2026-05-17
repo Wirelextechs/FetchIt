@@ -24,8 +24,8 @@ import { useRouter } from "next/navigation";
 const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { 
   ssr: false,
   loading: () => (
-    <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-600 gap-4">
-      <div className="w-12 h-12 rounded-full border-4 border-slate-800 border-t-emerald-500 animate-spin" />
+    <div className="w-full h-full bg-background flex flex-col items-center justify-center text-muted-foreground gap-4">
+      <div className="w-12 h-12 rounded-full border-4 border-muted border-t-emerald-500 animate-spin" />
       <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Radar...</p>
     </div>
   )
@@ -166,9 +166,9 @@ export default function RiderDashboard() {
   return (
     <div className="flex flex-col lg:flex-row flex-1 h-full overflow-hidden relative">
       {/* Tactical Radar Map */}
-      <div className="h-[45vh] lg:h-full lg:flex-1 relative border-r border-white/5 shrink-0">
+      <div className="h-[45vh] lg:h-full lg:flex-1 relative border-r border-border shrink-0">
         <RadarMap gigs={gigs} />
-        <div className="absolute bottom-20 lg:bottom-12 left-6 z-[400] bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
+        <div className="absolute bottom-20 lg:bottom-12 left-6 z-[400] glass px-4 py-2 rounded-2xl border border-border flex items-center gap-3">
           <div className="relative">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -178,33 +178,33 @@ export default function RiderDashboard() {
       </div>
 
       {/* Gig Feed */}
-      <div className="flex-1 flex flex-col bg-[#0F1115] rounded-t-[40px] lg:rounded-none -mt-12 lg:mt-0 relative z-20 overflow-hidden shadow-[0_-20px_60px_rgba(0,0,0,0.8)] lg:shadow-none border-t lg:border-t-0 border-white/5 lg:max-w-md xl:max-w-lg">
-        <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto my-4 shrink-0 lg:hidden opacity-50" />
+      <div className="flex-1 flex flex-col bg-card rounded-t-[40px] lg:rounded-none -mt-12 lg:mt-0 relative z-20 overflow-hidden shadow-[0_-20px_60px_rgba(0,0,0,0.1)] lg:shadow-none border-t lg:border-t-0 border-border lg:max-w-md xl:max-w-lg">
+        <div className="w-12 h-1.5 bg-muted rounded-full mx-auto my-4 shrink-0 lg:hidden opacity-50" />
         
         <div className="flex-1 overflow-y-auto px-6 pb-10 pt-2 lg:pt-8 custom-scrollbar">
           <div className="flex justify-between items-end mb-8">
           <div>
-            <h2 className="text-xl font-black tracking-tight text-white mb-1">Tactical Radar</h2>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Missions in your sector</p>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-1">Tactical Radar</h2>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Missions in your sector</p>
           </div>
           <div className="text-right">
             <span className="text-2xl font-black text-emerald-500">{gigs.length}</span>
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Gigs Ready</span>
+            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Gigs Ready</span>
           </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4">
           {loading ? (
             <div className="py-20 flex flex-col items-center gap-4">
-              <Loader2 className="w-8 h-8 text-slate-700 animate-spin" />
-              <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Updating Feed...</p>
+              <Loader2 className="w-8 h-8 text-muted-foreground/30 animate-spin" />
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Updating Feed...</p>
             </div>
           ) : gigs.length === 0 ? (
             <div className="py-16 text-center">
-              <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/5">
-                <Radar className="w-10 h-10 text-slate-700 animate-pulse" />
+              <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border">
+                <Radar className="w-10 h-10 text-muted-foreground/20 animate-pulse" />
               </div>
-              <p className="text-slate-500 text-sm font-bold uppercase tracking-widest px-10 leading-relaxed">
+              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest px-10 leading-relaxed">
                 Quiet sector. Move to a glow zone to increase visibility.
               </p>
             </div>
@@ -325,7 +325,7 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-6 rounded-[32px] relative overflow-hidden group shadow-xl"
+      className="bg-muted/50 border border-border p-6 rounded-[32px] relative overflow-hidden group shadow-sm"
     >
       <div className="flex justify-between items-start mb-6 relative z-10">
         <div className="flex items-center gap-4">
@@ -333,10 +333,10 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
             <Package className="w-7 h-7" />
           </div>
           <div>
-            <h3 className="font-black text-base text-slate-100">{gig.description || "General Delivery"}</h3>
+            <h3 className="font-black text-base text-foreground">{gig.description || "General Delivery"}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Broadcast</span>
-              <div className="w-1 h-1 rounded-full bg-slate-700" />
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Broadcast</span>
+              <div className="w-1 h-1 rounded-full bg-border" />
               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
                 <Clock className="w-2.5 h-2.5" /> 
                 {new Date(gig.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -347,18 +347,18 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
         <div className="text-right">
           <div className="flex items-baseline gap-0.5">
             <span className="text-[10px] font-black text-emerald-500">GH₵</span>
-            <span className="text-2xl font-black text-white tracking-tighter">{Number(gig.offered_price || 0).toFixed(2)}</span>
+            <span className="text-2xl font-black text-foreground tracking-tighter">{Number(gig.offered_price || 0).toFixed(2)}</span>
           </div>
-          <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Target Pay</p>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Target Pay</p>
         </div>
       </div>
 
       <div className="space-y-4 mb-8 relative z-10 px-2">
-        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+        <div className="flex items-center gap-4 text-xs font-bold text-foreground/70">
           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           <span className="truncate">{gig.pickup_landmark}</span>
         </div>
-        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+        <div className="flex items-center gap-4 text-xs font-bold text-foreground/70">
           <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
           <span className="truncate">{gig.dropoff_landmark}</span>
         </div>
@@ -367,7 +367,7 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
       <button 
         onClick={handleClaim}
         disabled={claiming}
-        className="w-full bg-emerald-600 text-white font-black py-4 rounded-[20px] text-[10px] uppercase tracking-[0.2em] shadow-[0_10px_20px_rgba(16,185,129,0.15)] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:bg-slate-800 disabled:text-slate-600"
+        className="w-full bg-emerald-600 text-white font-black py-4 rounded-[20px] text-[10px] uppercase tracking-[0.2em] shadow-[0_10px_20px_rgba(16,185,129,0.15)] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:bg-muted disabled:text-muted-foreground"
       >
         {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Claim Mission"}
       </button>

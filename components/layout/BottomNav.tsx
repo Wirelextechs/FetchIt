@@ -28,7 +28,7 @@ export function BottomNav({ className }: { className?: string }) {
               href={link.href}
               className={cn(
                 "flex flex-col items-center justify-center p-2 rounded-2xl relative transition-all duration-300 w-16",
-                isActive ? "text-emerald-400" : "text-slate-500 hover:text-slate-300"
+                isActive ? "text-emerald-500" : "text-muted-foreground hover:text-foreground"
               )}
             >
               {isActive && (

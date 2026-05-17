@@ -107,7 +107,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
           />
           
           <motion.div
@@ -115,18 +115,18 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative w-full max-w-md bg-white/90 backdrop-blur-md rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden p-6 pb-8"
+            className="relative w-full max-w-md glass rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden p-6 pb-8 border-border"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 bg-slate-100/50 hover:bg-slate-200 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 bg-muted/50 hover:bg-muted rounded-full transition-colors"
             >
-              <X className="w-5 h-5 text-slate-500" />
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
 
             <div className="text-center mb-8 mt-2">
-              <h2 className="text-2xl font-bold text-slate-800">Welcome to FetchIt</h2>
-              <p className="text-slate-500 text-sm mt-1">
+              <h2 className="text-2xl font-bold text-foreground">Welcome to FetchIt</h2>
+              <p className="text-muted-foreground text-sm mt-1">
                 {step === "phone" ? "Enter your phone number to secure your order." : "Enter your 4-digit PIN."}
               </p>
             </div>
@@ -141,7 +141,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                   className="space-y-4"
                 >
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                       <PhoneIcon className="w-5 h-5" />
                     </span>
                     <input
@@ -149,7 +149,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                       placeholder="e.g. 0241234567"
-                      className="w-full pl-12 pr-4 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-lg font-medium transition-all"
+                      className="w-full pl-12 pr-4 py-4 bg-background/50 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-lg font-medium transition-all text-foreground"
                       autoFocus
                     />
                   </div>
@@ -172,7 +172,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                   className="space-y-4"
                 >
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
                       <Lock className="w-5 h-5" />
                     </span>
                     <input
@@ -182,7 +182,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                       value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                       placeholder="••••"
-                      className="w-full pl-12 pr-4 py-4 bg-white/50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-center text-2xl tracking-[1em] font-black transition-all"
+                      className="w-full pl-12 pr-4 py-4 bg-background/50 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-center text-2xl tracking-[1em] font-black transition-all text-foreground"
                       autoFocus
                     />
                   </div>
@@ -190,7 +190,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                   <button
                     onClick={handleAuthenticate}
                     disabled={pin.length < 4 || loading}
-                    className="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:bg-slate-800 disabled:opacity-50 transition-colors shadow-lg shadow-slate-900/20"
+                    className="w-full bg-foreground text-background py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:opacity-90 disabled:opacity-50 transition-colors shadow-lg shadow-foreground/20"
                   >
                     {loading ? (
                       <Loader2 className="w-5 h-5 animate-spin" />
@@ -203,7 +203,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                       setStep("phone");
                       setError(null);
                     }}
-                    className="w-full text-slate-500 text-sm py-2 hover:text-slate-800 transition-colors"
+                    className="w-full text-muted-foreground text-sm py-2 hover:text-foreground transition-colors"
                   >
                     Back to Phone
                   </button>

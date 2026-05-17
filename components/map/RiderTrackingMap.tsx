@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { useTheme } from "@/components/providers/ThemeProvider";
 
 // Fix Leaflet default icon path issues in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -50,7 +51,12 @@ function FlyToCenter({ center }: { center: [number, number] }) {
 
 // ── Tile Layer URLs ──────────────────────────────────────────────
 const TILE_LAYERS = {
-  standard: {
+  light: {
+    url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 19,
+  },
+  dark: {
     url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
     maxZoom: 19,
@@ -74,6 +80,7 @@ export default function RiderTrackingMap({
   isSatellite,
   onUserLocationFound,
 }: RiderTrackingMapProps) {
+  const { theme } = useTheme();
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>(fallbackCenter);
   const [locating, setLocating] = useState(true);
@@ -114,12 +121,12 @@ export default function RiderTrackingMap({
     { id: 3, type: "company", lat: mapCenter[0] + 0.003, lng: mapCenter[1] - 0.0028, name: "Kofi C.", eta: "4 min" },
   ], [mapCenter]);
 
-  const layer = isSatellite ? TILE_LAYERS.satellite : TILE_LAYERS.standard;
+  const layer = isSatellite ? TILE_LAYERS.satellite : (theme === 'dark' ? TILE_LAYERS.dark : TILE_LAYERS.light);
 
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
       {locating && (
-        <div style={{ position: "absolute", top: 80, left: "50%", transform: "translateX(-50%)", zIndex: 600, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(8px)", color: "white", fontSize: 11, fontWeight: 600, padding: "6px 14px", borderRadius: 999, border: "1px solid rgba(255,255,255,0.1)" }}>
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-[600] glass px-4 py-2 rounded-full text-[11px] font-semibold text-foreground">
           📍 Finding your location…
         </div>
       )}

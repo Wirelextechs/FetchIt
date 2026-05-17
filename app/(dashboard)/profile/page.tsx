@@ -40,7 +40,7 @@ export default function ProfilePage() {
 
   if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center w-full">
+      <div className="min-h-screen bg-background flex items-center justify-center w-full">
         <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
       </div>
     );
@@ -48,10 +48,10 @@ export default function ProfilePage() {
 
   if (!user) {
      return (
-        <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center w-full border-x border-slate-200">
-            <User className="w-16 h-16 text-slate-300 mb-4" />
-            <h1 className="text-xl font-bold text-slate-800">Account Access</h1>
-            <p className="text-slate-500 text-sm mt-2 mb-8 px-8">Please log in to view your profile and manage your orders.</p>
+        <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 text-center w-full border-x border-border">
+            <User className="w-16 h-16 text-muted-foreground/30 mb-4" />
+            <h1 className="text-xl font-bold text-foreground">Account Access</h1>
+            <p className="text-muted-foreground text-sm mt-2 mb-8 px-8">Please log in to view your profile and manage your orders.</p>
             <button onClick={() => router.push("/")} className="bg-emerald-600 text-white font-bold w-full max-w-xs py-4 rounded-2xl shadow-lg shadow-emerald-600/20">Sign In</button>
         </div>
      )
@@ -79,34 +79,34 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 w-full pb-32 relative">
+    <div className="min-h-screen bg-background w-full pb-32 relative">
       <div className="max-w-4xl mx-auto w-full">
         {/* Dynamic Glassmorphism Header */}
         <div className="relative pt-16 pb-24 px-6 overflow-hidden md:rounded-[48px] md:mt-4">
           {/* Abstract Background Shapes */}
-          <div className="absolute top-0 left-0 w-full h-full bg-slate-900">
-             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/20 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse"></div>
-             <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/20 rounded-full -ml-24 -mb-24 blur-3xl"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-card">
+             <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full -mr-32 -mt-32 blur-3xl animate-pulse"></div>
+             <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/10 rounded-full -ml-24 -mb-24 blur-3xl"></div>
           </div>
 
           <div className="relative z-10 flex flex-col items-center text-center">
             <div className="relative group">
               <div className="absolute -inset-1 bg-gradient-to-r from-emerald-400 to-blue-500 rounded-[36px] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-              <div className="relative w-24 h-24 bg-white rounded-[32px] flex items-center justify-center shadow-xl p-1">
-                <div className="w-full h-full bg-slate-100 rounded-[24px] flex items-center justify-center text-slate-400 overflow-hidden">
+              <div className="relative w-24 h-24 bg-background rounded-[32px] flex items-center justify-center shadow-xl p-1">
+                <div className="w-full h-full bg-muted rounded-[24px] flex items-center justify-center text-muted-foreground overflow-hidden">
                   <User className="w-12 h-12" />
                 </div>
               </div>
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 border-4 border-slate-900 rounded-full flex items-center justify-center shadow-lg">
+              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 border-4 border-card rounded-full flex items-center justify-center shadow-lg">
                  <Shield className="w-3.5 h-3.5 text-white" />
               </div>
             </div>
 
-            <h1 className="text-2xl font-black text-white mt-6 tracking-tight">
+            <h1 className="text-2xl font-black text-foreground mt-6 tracking-tight">
               {profile?.name || "Premium User"}
             </h1>
-            <p className="text-slate-400 text-sm font-medium flex items-center justify-center gap-2 mt-2 bg-white/5 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/10">
-               <Phone className="w-3.5 h-3.5 text-emerald-400" />
+            <p className="text-muted-foreground text-sm font-medium flex items-center justify-center gap-2 mt-2 bg-muted px-4 py-1.5 rounded-full border border-border">
+               <Phone className="w-3.5 h-3.5 text-emerald-500" />
                {profile?.phone_number || "Verified Account"}
             </p>
           </div>
@@ -115,19 +115,19 @@ export default function ProfilePage() {
         {/* Floating Action Section */}
         <div className="px-6 -mt-12 relative z-20 space-y-4 pb-20">
           {/* Stats Row - Adapted for User vs Rider */}
-          <div className="bg-white/80 backdrop-blur-xl rounded-[32px] p-2 shadow-xl shadow-slate-200/50 border border-white flex gap-2">
-             <div className="flex-1 bg-slate-50/50 rounded-[24px] p-4 flex flex-col items-center text-center">
+          <div className="bg-card rounded-[32px] p-2 shadow-xl shadow-foreground/5 border border-border flex gap-2">
+             <div className="flex-1 bg-muted/50 rounded-[24px] p-4 flex flex-col items-center text-center">
                 <Package className="w-5 h-5 text-emerald-600 mb-1" />
-                <span className="text-lg font-black text-slate-800">--</span>
-                <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Gigs Posted</span>
+                <span className="text-lg font-black text-foreground">--</span>
+                <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Gigs Posted</span>
              </div>
              
              {isRider ? (
                <>
-                 <div className="flex-1 bg-slate-50/50 rounded-[24px] p-4 flex flex-col items-center text-center">
+                 <div className="flex-1 bg-muted/50 rounded-[24px] p-4 flex flex-col items-center text-center">
                     <Star className="w-5 h-5 text-amber-500 mb-1" />
-                    <span className="text-lg font-black text-slate-800">5.0</span>
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Rating</span>
+                    <span className="text-lg font-black text-foreground">5.0</span>
+                    <span className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest">Rating</span>
                  </div>
                  <div className="flex-1 bg-emerald-600 rounded-[24px] p-4 flex flex-col items-center text-center text-white shadow-lg shadow-emerald-600/30">
                     <CreditCard className="w-5 h-5 mb-1" />
@@ -147,8 +147,8 @@ export default function ProfilePage() {
           {/* Account Sections */}
           <div className="space-y-6">
              <div className="space-y-3">
-               <h2 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Personal Settings</h2>
-               <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+               <h2 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Personal Settings</h2>
+               <div className="bg-card rounded-[32px] shadow-sm border border-border overflow-hidden">
                   <MenuItem 
                     icon={<Bike className="w-5 h-5 text-emerald-600" />} 
                     label="Rider Portal" 
@@ -160,7 +160,7 @@ export default function ProfilePage() {
                     onClick={() => router.push('/profile/locations')}
                   />
                   <MenuItem 
-                    icon={<Settings className="w-5 h-5 text-slate-500" />} 
+                    icon={<Settings className="w-5 h-5 text-muted-foreground" />}
                     label="Account Settings" 
                     onClick={() => router.push('/profile/settings')}
                   />
@@ -173,8 +173,8 @@ export default function ProfilePage() {
              </div>
 
              <div className="space-y-3">
-               <h2 className="px-2 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Support & Legal</h2>
-               <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden">
+               <h2 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Support & Legal</h2>
+               <div className="bg-card rounded-[32px] shadow-sm border border-border overflow-hidden">
                   <MenuItem icon={<LogOut className="w-5 h-5 text-rose-500" />} label="Log Out" onClick={handleLogout} destructive />
                </div>
              </div>
@@ -204,15 +204,15 @@ function MenuItem({ icon, label, onClick, destructive }: { icon: React.ReactNode
   return (
     <button 
       onClick={onClick}
-      className="w-full flex items-center justify-between p-5 hover:bg-slate-50 transition-all active:scale-[0.98] border-b border-slate-50 last:border-0 text-left"
+      className="w-full flex items-center justify-between p-5 hover:bg-muted transition-all active:scale-[0.98] border-b border-border last:border-0 text-left"
     >
       <div className="flex items-center gap-4">
-         <div className="w-12 h-12 rounded-[18px] bg-slate-50 flex items-center justify-center shadow-inner">
+         <div className="w-12 h-12 rounded-[18px] bg-muted flex items-center justify-center shadow-inner">
             {icon}
          </div>
-         <span className={`font-bold ${destructive ? 'text-rose-600' : 'text-slate-700'}`}>{label}</span>
+         <span className={`font-bold ${destructive ? 'text-rose-600' : 'text-foreground'}`}>{label}</span>
       </div>
-      <ChevronRight className="w-5 h-5 text-slate-300" />
+      <ChevronRight className="w-5 h-5 text-muted-foreground" />
     </button>
   );
 }

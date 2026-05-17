@@ -45,7 +45,7 @@ export default function LocationInput({ onConfirm, hideConfirmButton }: Location
   return (
     <div className="relative">
       {/* Main Input — Obsidian Glassmorphism */}
-      <div className="flex items-center gap-3 backdrop-blur-md bg-black/60 border border-white/10 rounded-2xl px-4 py-3 shadow-2xl">
+      <div className="flex items-center gap-3 glass border-border rounded-2xl px-4 py-3 shadow-2xl">
         <MapPin className="w-5 h-5 text-amber-400 shrink-0" />
         <input
           type="text"
@@ -54,28 +54,28 @@ export default function LocationInput({ onConfirm, hideConfirmButton }: Location
           onFocus={() => setFocused(true)}
           onBlur={() => setTimeout(() => setFocused(false), 150)}
           placeholder="Enter landmark or description... (e.g. Blue gate near mosque)"
-          className="flex-1 bg-transparent text-white placeholder-white/40 outline-none text-sm font-medium"
+          className="flex-1 bg-transparent text-foreground placeholder-muted-foreground outline-none text-sm font-medium"
         />
         {value && (
           <button onClick={() => setValue("")}>
-            <X className="w-4 h-4 text-white/40 hover:text-white transition-colors" />
+            <X className="w-4 h-4 text-muted-foreground hover:text-foreground transition-colors" />
           </button>
         )}
       </div>
 
       {/* Helper label */}
-      <p className="text-white/30 text-[10px] font-medium mt-2 ml-1">
+      <p className="text-muted-foreground text-[10px] font-medium mt-2 ml-1">
         💡 No pin needed — describe any local landmark and your rider will find you.
       </p>
 
       {/* Suggestions Dropdown */}
       {focused && suggestions.length > 0 && (
-        <div className="absolute top-full mt-2 left-0 right-0 backdrop-blur-md bg-black/80 border border-white/10 rounded-2xl overflow-hidden z-50 shadow-2xl">
+        <div className="absolute top-full mt-2 left-0 right-0 glass border-border rounded-2xl overflow-hidden z-50 shadow-2xl">
           {suggestions.map((s, i) => (
             <button
               key={i}
               onMouseDown={() => handleSelect(s)}
-              className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-white/80 hover:bg-white/10 transition-colors border-b border-white/5 last:border-0"
+              className="w-full flex items-center gap-3 px-4 py-3 text-left text-sm text-foreground/80 hover:bg-muted/10 transition-colors border-b border-border last:border-0"
             >
               <Search className="w-4 h-4 text-amber-400 shrink-0" />
               {s}

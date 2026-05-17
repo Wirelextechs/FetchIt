@@ -92,13 +92,13 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   ];
 
   return (
-    <div className="h-screen flex flex-col bg-[#09090b] text-white w-full relative overflow-hidden font-sans">
+    <div className="h-screen flex flex-col bg-background text-foreground w-full relative overflow-hidden font-sans">
       {/* Top Header */}
-      <header className="p-8 pt-12 bg-slate-900/20 backdrop-blur-3xl border-b border-white/5 shrink-0 z-[100]">
+      <header className="p-8 pt-12 bg-card border-b border-border shrink-0 z-[100]">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-3">
-            <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-700'}`} />
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500">
+            <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-muted-foreground/30'}`} />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
               {isOnline ? 'Live Command' : 'System Standby'}
             </span>
           </div>
@@ -107,7 +107,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all duration-500 border ${
               isOnline 
                 ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
-                : 'glass text-slate-400 border-white/5'
+                : 'glass text-muted-foreground border-border'
             }`}
           >
             <Power className="w-3.5 h-3.5" />
@@ -117,15 +117,15 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
 
         <div className="flex justify-between items-end">
           <div>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">Command Center Balance</p>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Command Center Balance</p>
             <div className="flex items-baseline gap-1.5">
               <span className="text-xs font-black text-emerald-500">GHS</span>
-              <span className="text-4xl font-black tracking-tighter text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">{earnings.toFixed(2)}</span>
+              <span className="text-4xl font-black tracking-tighter text-foreground drop-shadow-[0_0_15px_rgba(0,0,0,0.1)]">{earnings.toFixed(2)}</span>
             </div>
           </div>
           <button 
             onClick={triggerSOS}
-            className="w-14 h-14 glass-dark border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_0_30px_rgba(244,63,94,0.15)] group"
+            className="w-14 h-14 glass border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_0_30px_rgba(244,63,94,0.15)] group"
           >
             <AlertOctagon className="w-7 h-7 group-active:scale-110 transition-transform" />
           </button>
@@ -138,7 +138,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-[#0F1115]/90 backdrop-blur-2xl border-t border-white/5 safe-area-bottom z-[100] flex justify-center shrink-0">
+      <nav className="bg-card border-t border-border safe-area-bottom z-[100] flex justify-center shrink-0">
         <div className="w-full max-w-lg flex justify-around items-center h-20 px-4">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
@@ -148,7 +148,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
                 key={link.href}
                 href={link.href}
                 className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-2xl relative transition-all duration-300 ${
-                  isActive ? 'text-emerald-500' : 'text-slate-500 hover:text-slate-300'
+                  isActive ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {isActive && (
