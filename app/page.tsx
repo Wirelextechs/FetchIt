@@ -75,20 +75,24 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen bg-[#09090b] w-full pb-20 relative">
       <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col">
         {/* Header Section */}
-        <div className="bg-gradient-to-br from-emerald-600/20 to-blue-600/20 px-6 pt-16 pb-12 text-white border-b border-white/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-emerald-500/10 blur-[120px] rounded-full -mr-48 -mt-48"></div>
-          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-blue-500/10 blur-[100px] rounded-full -ml-24 -mb-24"></div>
+        <div className="px-6 pt-16 pb-12 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-500/10 blur-[150px] rounded-full -mr-48 -mt-48"></div>
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/10 blur-[120px] rounded-full -ml-24 -mb-24"></div>
 
-          <div className="flex justify-between items-center relative z-10">
+          <div className="flex justify-between items-start relative z-10">
             <div>
-              <p className="text-emerald-400 text-[10px] font-black uppercase tracking-[0.2em] mb-1">Service Area</p>
-              <h1 className="text-2xl font-black flex items-center tracking-tight">
-                <MapPin className="w-5 h-5 mr-2 text-emerald-500" />
-                {DEFAULT_CITY.name}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(16,185,129,0.3)]">
+                  <Package className="w-4 h-4 text-white" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400">FetchIt Techiman</span>
+              </div>
+              <h1 className="text-3xl font-black tracking-tighter flex items-center gap-2">
+                Everywhere, <span className="text-emerald-500">Fast.</span>
               </h1>
             </div>
-            <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-white/10">
-              <span className="font-black text-emerald-400">
+            <div className="w-12 h-12 glass rounded-2xl flex items-center justify-center border-white/10 shadow-xl group cursor-pointer hover:border-emerald-500/30 transition-all">
+              <span className="font-black text-emerald-400 group-hover:scale-110 transition-transform">
                 {user ? user.email?.charAt(0).toUpperCase() : "F"}
               </span>
             </div>
@@ -99,16 +103,16 @@ export default function HomePage() {
               <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-emerald-500 transition-colors" />
               <input 
                 type="text" 
-                placeholder="Find a rider or shopper..."
-                className="w-full glass text-white rounded-2xl py-5 pl-14 pr-6 outline-none font-bold placeholder:text-slate-600 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm"
+                placeholder="Where should we pick up or shop?"
+                className="w-full glass text-white rounded-2xl py-5 pl-14 pr-6 outline-none font-bold placeholder:text-slate-600 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm shadow-2xl"
               />
             </div>
           </div>
         </div>
 
         {/* Service Toggle */}
-        <div className="px-6 py-10 flex flex-col gap-8">
-          <div className="glass-dark p-1.5 rounded-[32px] flex items-center max-w-xl self-center w-full shadow-2xl">
+        <div className="px-6 py-4 flex flex-col gap-8">
+          <div className="glass-dark p-1.5 rounded-[32px] flex items-center max-w-xl self-center w-full shadow-2xl border-white/5">
             <button 
               onClick={() => setServiceMode("delivery")}
               className={`flex-1 flex items-center justify-center gap-2 py-4 rounded-[26px] font-black text-[10px] uppercase tracking-widest transition-all duration-500 ${
@@ -160,7 +164,7 @@ export default function HomePage() {
             <h2 className="text-xl font-black text-white tracking-tight">
               {serviceMode === "delivery" ? "Active Dispatchers" : "Expert Agents"}
             </h2>
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">Live</span>
+            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 px-4 py-2 rounded-full border border-emerald-500/20">Live Now</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -235,24 +239,24 @@ export default function HomePage() {
 
               <div className="space-y-8">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Pickup Point</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Pickup Point</label>
                   <input 
                     type="text" 
                     value={pickupLandmark}
                     onChange={(e) => setPickupLandmark(e.target.value)}
                     placeholder="e.g. Near Top Oil Techiman"
-                    className="w-full glass border-none rounded-2xl py-5 px-6 text-white font-bold placeholder:text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full glass border-none rounded-2xl py-5 px-6 text-white font-bold placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 ml-1">Dropoff Point</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Dropoff Point</label>
                   <input 
                     type="text" 
                     value={dropoffLandmark}
                     onChange={(e) => setDropoffLandmark(e.target.value)}
                     placeholder="e.g. Krobo Gate 3"
-                    className="w-full glass border-none rounded-2xl py-5 px-6 text-white font-bold placeholder:text-slate-700 outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full glass border-none rounded-2xl py-5 px-6 text-white font-bold placeholder:text-slate-500 outline-none focus:ring-2 focus:ring-emerald-500/20"
                   />
                 </div>
 
