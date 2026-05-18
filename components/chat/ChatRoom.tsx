@@ -13,6 +13,7 @@ interface ChatRoomProps {
   sessionId: string;
   role: UserRole;
   currentUserId: string;
+  children?: React.ReactNode; // New prop for embedded content
 }
 
 interface ChatSession {
@@ -45,7 +46,7 @@ interface UserProfile {
   wallet_balance: number;
 }
 
-export function ChatRoom({ sessionId, role, currentUserId }: ChatRoomProps) {
+export function ChatRoom({ sessionId, role, currentUserId, children }: ChatRoomProps) {
   const [session, setSession] = useState<ChatSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,7 +229,7 @@ export function ChatRoom({ sessionId, role, currentUserId }: ChatRoomProps) {
   const landmark = session?.gigs?.dropoff_landmark || session?.direct_requests?.dropoff_landmark || "Techiman Market";
 
   return (
-    <div className="flex flex-col h-full bg-background relative">
+    <div className="flex flex-col h-full bg-background relative overflow-hidden">
       {/* Header */}
       <header className="flex items-center justify-between p-4 border-b border-border bg-card sticky top-0 z-20">
         <div className="flex items-center space-x-3">
@@ -261,9 +262,12 @@ export function ChatRoom({ sessionId, role, currentUserId }: ChatRoomProps) {
         onWithdraw={withdrawToMoMo}
       />
 
-      {/* Chat Timeline */}
-      <div className="flex-1 overflow-hidden flex flex-col">
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Chat Timeline and Scrollable Container */}
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-background">
+        {/* Embedded Children Content (e.g. Mission Details) */}
+        {children}
+
+        <div className="p-4 space-y-4">
           {messages.map((msg) => {
             const isMe = msg.sender_id === currentUserId;
             const isSystem = msg.message_type !== 'text';
@@ -335,7 +339,7 @@ export function ChatRoom({ sessionId, role, currentUserId }: ChatRoomProps) {
               <input
                 type="text"
                 placeholder="Type a message..."
-                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2"
+                className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-2 outline-none"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && e.currentTarget.value) {
                     handleSendMessage(e.currentTarget.value);
