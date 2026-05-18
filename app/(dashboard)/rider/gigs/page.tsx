@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase/client";
-import { MapPin, ArrowRight, ShieldCheck, Timer, Loader2 } from "lucide-react";
+import { MapPin, ArrowRight, ShieldCheck, Timer, Loader2, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Gig {
   id: string;
@@ -19,12 +20,23 @@ interface Gig {
   created_at: string;
 }
 
+interface CustomToast {
+  message: string;
+  type: "success" | "error";
+}
+
 export default function RiderGigsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [gigs, setGigs] = useState<Gig[]>([]);
   const [loading, setLoading] = useState(true);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [toast, setToast] = useState<CustomToast | null>(null);
+
+  const showToast = (message: string, type: "success" | "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 4000);
+  };
 
   useEffect(() => {
     const fetchGigs = async () => {
@@ -61,10 +73,13 @@ export default function RiderGigsPage() {
     setAcceptingId(gig.id);
 
     try {
-      // 1. Update gig status
+      // 1. Update gig status to 'assigned' and set the assigned_rider_id payload
       const { error: updateError } = await supabase
         .from('gigs')
-        .update({ status: 'accepted' })
+        .update({ 
+          status: 'assigned',
+          assigned_rider_id: user.id 
+        })
         .eq('id', gig.id);
 
       if (updateError) throw updateError;
@@ -93,11 +108,14 @@ export default function RiderGigsPage() {
 
       if (walletError) throw walletError;
 
-      // 4. Redirect to chat
-      router.push(`/user/chat/${sessionData.id}`); // Both user and rider use the same chat page structure usually
+      // 4. Show success toast and redirect after 1.5s
+      showToast("Gig claimed successfully! Opening chat...", "success");
+      setTimeout(() => {
+        router.push(`/user/chat/${sessionData.id}`);
+      }, 1500);
     } catch (err) {
       console.error("Error accepting gig:", err);
-      alert("Failed to accept gig. It might have been taken by another rider.");
+      showToast("Failed to accept gig. It might have been taken by another rider.", "error");
     } finally {
       setAcceptingId(null);
     }
@@ -184,6 +202,30 @@ export default function RiderGigsPage() {
           </div>
         )}
       </div>
+
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.9 }}
+            className="fixed top-6 left-4 right-4 z-50 max-w-sm mx-auto p-4 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl border border-slate-200/50 dark:border-white/10 flex items-center space-x-3"
+          >
+            {toast.type === "success" ? (
+              <div className="w-8 h-8 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-500">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20 text-rose-500">
+                <Info className="w-5 h-5" />
+              </div>
+            )}
+            <p className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex-1 leading-snug">
+              {toast.message}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

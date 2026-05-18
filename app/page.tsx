@@ -30,6 +30,113 @@ import { useTheme } from "@/components/providers/ThemeProvider";
 // ── Tab Type Definition ──────────────────────────────────────────
 type UseCaseTab = "shopper" | "errand" | "rider";
 
+function AnimatedRiderBadge() {
+  return (
+    <div className="inline-flex items-center gap-4 bg-white/85 dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200/80 dark:border-white/10 rounded-full pl-3 pr-5 py-2.5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] hover:border-emerald-500/30 transition-all select-none">
+      {/* Rider Animation Container */}
+      <div className="relative w-12 h-8 overflow-hidden bg-emerald-500/10 dark:bg-emerald-500/20 rounded-full flex items-center justify-center border border-emerald-500/20 shrink-0">
+        
+        {/* Speed Lines */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            initial={{ x: 40 }}
+            animate={{ x: -40 }}
+            transition={{ repeat: Infinity, duration: 1.2, ease: "linear" }}
+            className="absolute top-2 right-0 w-4 h-[1.5px] bg-emerald-500/40"
+          />
+          <motion.div
+            initial={{ x: 45 }}
+            animate={{ x: -45 }}
+            transition={{ repeat: Infinity, duration: 0.9, ease: "linear", delay: 0.3 }}
+            className="absolute top-4 right-0 w-6 h-[1px] bg-emerald-500/30"
+          />
+          <motion.div
+            initial={{ x: 40 }}
+            animate={{ x: -40 }}
+            transition={{ repeat: Infinity, duration: 1.5, ease: "linear", delay: 0.6 }}
+            className="absolute top-6 right-0 w-3 h-[2px] bg-emerald-500/40"
+          />
+        </div>
+
+        {/* Minimalist Rider SVG */}
+        <motion.svg
+          animate={{ y: [0, -1.5, 0] }}
+          transition={{ repeat: Infinity, duration: 0.6, ease: "easeInOut" }}
+          viewBox="0 0 64 48"
+          className="w-10 h-8 text-emerald-600 dark:text-emerald-400 stroke-current fill-none relative z-10"
+        >
+          {/* Bicycle Frame */}
+          <path
+            d="M 18 36 L 28 26 L 42 26 L 48 36"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 28 26 L 33 16 M 33 16 L 42 26"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 33 16 L 30 11 L 36 11"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          
+          {/* Rider Body & Backpack */}
+          <circle cx="34" cy="7" r="2.5" className="fill-current stroke-none" />
+          <path
+            d="M 32 10 L 26 15 L 28 22"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 32 10 L 39 12 L 36 11"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Front Wheel */}
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+            style={{ transformOrigin: "48px 36px" }}
+          >
+            <circle cx="48" cy="36" r="6" strokeWidth="2.5" />
+            <line x1="48" y1="30" x2="48" y2="42" strokeWidth="1" />
+            <line x1="42" y1="36" x2="54" y2="36" strokeWidth="1" />
+          </motion.g>
+
+          {/* Back Wheel */}
+          <motion.g
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
+            style={{ transformOrigin: "18px 36px" }}
+          >
+            <circle cx="18" cy="36" r="6" strokeWidth="2.5" />
+            <line x1="18" y1="30" x2="18" y2="42" strokeWidth="1" />
+            <line x1="12" y1="36" x2="24" y2="36" strokeWidth="1" />
+          </motion.g>
+        </motion.svg>
+      </div>
+
+      {/* Pill Text content */}
+      <div className="flex flex-col items-start leading-tight">
+        <span className="text-[10px] font-black uppercase tracking-[0.2em] bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/15 mb-0.5">
+          Fast Dispatch
+        </span>
+        <span className="text-[9px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-slate-400">
+          Ghana's Premier Logistics Engine
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export default function RootLandingPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -111,10 +218,7 @@ export default function RootLandingPage() {
           className="space-y-6 max-w-4xl"
         >
           {/* Badge */}
-          <div className="inline-flex items-center gap-2 bg-emerald-500/10 dark:bg-emerald-500/25 border border-emerald-500/20 rounded-full px-4 py-2">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 animate-spin" />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-600 dark:text-emerald-400">Ghana's Premier Logistics Engine</span>
-          </div>
+          <AnimatedRiderBadge />
 
           {/* Headline */}
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-black tracking-tighter leading-[1.05] text-slate-900 dark:text-white">
@@ -125,7 +229,7 @@ export default function RootLandingPage() {
           </h1>
 
           {/* Sub-headline */}
-          <p className="text-base sm:text-lg md:text-xl text-slate-500 dark:text-slate-400 max-w-2xl mx-auto font-medium leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-slate-700 dark:text-slate-300 max-w-2xl mx-auto font-semibold leading-relaxed">
             Hire vetted personal shoppers to buy your market goods safely, or get a lightning-fast dispatch rider in minutes. All backed by our secure escrow pipeline.
           </p>
 
@@ -182,7 +286,7 @@ export default function RootLandingPage() {
                 <Wallet className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-black text-slate-950 dark:text-white mb-3">100% Escrow Protection</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+              <p className="text-sm text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                 Your hard-earned money is held safely by our Moolre escrow system. Shoppers only receive payment via MoMo once you confirm the market goods are correct.
               </p>
             </div>
@@ -202,7 +306,7 @@ export default function RootLandingPage() {
                 <MapPin className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-black text-slate-950 dark:text-white mb-3">Landmark Navigation</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+              <p className="text-sm text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                 No street names or digital address pins in Techiman? No problem. Simply reference popular landmarks (Top Oil, Krobo Gate) and let our expert riders handle the rest.
               </p>
             </div>
@@ -222,7 +326,7 @@ export default function RootLandingPage() {
                 <Clock className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-black text-slate-950 dark:text-white mb-3">5-Minute Priority Loop</h3>
-              <p className="text-sm text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+              <p className="text-sm text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                 Our advanced dispatch loop matches your request to our vetted Company Riders first. This gives you high-fidelity security, speed, and premium delivery execution.
               </p>
             </div>
@@ -287,7 +391,7 @@ export default function RootLandingPage() {
                     <ShoppingBag className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-slate-950 dark:text-white tracking-tight">Need market goods? Send an agent.</h3>
-                  <p className="text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                     Need fresh tomatoes, rice, or yams from the Techiman Central Market but don't want to deal with the crowds? 
                     Simply post a shopping request, add your custom budget, fund the secure escrow account, and chat directly with your dedicated buyer.
                   </p>
@@ -345,7 +449,7 @@ export default function RootLandingPage() {
                     <Package className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-slate-950 dark:text-white tracking-tight">Left your keys? package to move?</h3>
-                  <p className="text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                     Have documents that need signing across town or left your keys behind? Set your own payout offer, specify simple pickup and delivery landmarks, and our dispatch priority system handles the rest.
                   </p>
                   <ul className="space-y-3 pt-2">
@@ -397,7 +501,7 @@ export default function RootLandingPage() {
                     <Bike className="w-6 h-6" />
                   </div>
                   <h3 className="text-2xl md:text-3xl font-black text-slate-950 dark:text-white tracking-tight">Be your own boss. Earn on the Radar.</h3>
-                  <p className="text-slate-500 dark:text-slate-400 font-semibold leading-relaxed">
+                  <p className="text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                     Have a motorbike, tricycle, or bicycle? Jump onto the FetchIt Tactical Radar. Claim gigs posted in town, complete deliveries safely, and withdraw your earnings directly to your Mobile Money wallet instantly.
                   </p>
                   <ul className="space-y-3 pt-2">
