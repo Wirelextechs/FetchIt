@@ -193,7 +193,7 @@ export default function RiderKycPage() {
   const renderStepIndicators = () => {
     if (currentStep === 5) return null;
     return (
-      <div className="flex items-center justify-between w-full max-w-xs mx-auto mb-10">
+      <div className="flex items-center justify-between w-full max-w-xs mx-auto mb-6">
         {[1, 2, 3, 4].map((s) => (
           <div key={s} className="flex items-center flex-1 last:flex-none">
             <div className={`w-8 h-8 rounded-full flex items-center justify-center font-black text-xs border transition-all ${
@@ -217,7 +217,7 @@ export default function RiderKycPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-slate-50 dark:bg-slate-950 font-sans p-4 sm:p-8 relative overflow-hidden pb-20">
+    <div className="min-h-full w-full flex flex-col bg-slate-50 dark:bg-slate-950 font-sans p-4 sm:p-8 relative overflow-y-auto pb-40">
       {/* Background Glows */}
       <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
@@ -226,14 +226,14 @@ export default function RiderKycPage() {
       {currentStep !== 5 && (
         <button 
           onClick={() => router.push("/rider/dashboard")}
-          className="self-start mb-6 flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors"
+          className="self-start mb-4 flex items-center gap-2 px-4 py-2 border border-slate-200 dark:border-white/10 rounded-2xl text-xs font-bold text-slate-500 hover:text-slate-950 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Radar Dashboard
         </button>
       )}
 
-      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col justify-center">
+      <div className="w-full max-w-lg mx-auto flex-1 flex flex-col justify-start mt-2">
         {renderStepIndicators()}
 
         <div className="w-full bg-white/70 dark:bg-slate-900/60 backdrop-blur-2xl border border-slate-200/50 dark:border-white/10 rounded-[32px] p-6 sm:p-8 shadow-2xl relative">
