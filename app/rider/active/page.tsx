@@ -7,7 +7,8 @@ import {
   ShieldCheck,
   Loader2,
   Navigation,
-  ChevronRight
+  ChevronRight,
+  Radar
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -24,36 +25,41 @@ export default function ActiveMissionPage() {
   const fetchActiveMission = useCallback(async () => {
     if (!user) return;
     
-    const { data: request } = await supabase
-      .from('direct_requests')
+    // 1. Fetch assigned gig
+    const { data: gig } = await supabase
+      .from('gigs')
       .select('*')
-      .eq('rider_id', user.id)
-      .eq('status', 'accepted')
+      .eq('assigned_rider_id', user.id)
+      .eq('status', 'assigned')
       .single();
     
     let activeMission = null;
 
-    if (request) {
-      activeMission = { ...request, type: 'direct' };
+    if (gig) {
+      activeMission = { ...gig, type: 'broadcast' };
     } else {
-      const { data: gig } = await supabase
-        .from('gigs')
+      // 2. Fallback to direct requests if no gig assigned
+      const { data: request } = await supabase
+        .from('direct_requests')
         .select('*')
+        .eq('rider_id', user.id)
         .eq('status', 'accepted')
         .single();
       
-      if (gig) {
-        activeMission = { ...gig, type: 'broadcast' };
+      if (request) {
+        activeMission = { ...request, type: 'direct' };
       }
     }
 
     if (activeMission) {
       setMission(activeMission);
 
+      // 3. Fetch associated chat session
       const { data: chatSession } = await supabase
         .from('chat_sessions')
         .select('id')
         .or(`direct_request_id.eq.${activeMission.id},gig_id.eq.${activeMission.id}`)
+        .eq('status', 'active')
         .single();
 
       if (chatSession) {
@@ -65,7 +71,12 @@ export default function ActiveMissionPage() {
   }, [user]);
 
   useEffect(() => {
-    fetchActiveMission();
+    let isMounted = true;
+    if (isMounted) {
+      setLoading(true);
+      fetchActiveMission();
+    }
+    return () => { isMounted = false; };
   }, [fetchActiveMission]);
 
   const handleComplete = async () => {
@@ -84,12 +95,12 @@ export default function ActiveMissionPage() {
 
   if (!mission || !chatSessionId) return (
     <div className="p-12 text-center flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-      <div className="w-24 h-24 bg-muted rounded-[40px] flex items-center justify-center mb-8 border border-border text-muted-foreground shadow-2xl">
-        <Navigation className="w-10 h-10" />
+      <div className="w-24 h-24 bg-muted rounded-[40px] flex items-center justify-center mx-auto mb-8 border border-border text-muted-foreground shadow-2xl">
+        <Radar className="w-10 h-10 animate-pulse" />
       </div>
-      <h2 className="text-2xl font-black text-foreground mb-3 tracking-tighter">No Active Mission</h2>
-      <p className="text-muted-foreground text-sm font-medium px-10 leading-relaxed">
-        Check the tactical radar for nearby gigs or wait for a direct booking.
+      <h2 className="text-2xl font-black text-foreground mb-3 tracking-tighter italic">No Active Mission</h2>
+      <p className="text-muted-foreground text-sm font-medium px-10 leading-relaxed max-w-xs mx-auto">
+        Your tactical radar is clear. Return to dashboard to scan for new gigs.
       </p>
       <button 
         onClick={() => router.push("/rider/dashboard")}
@@ -119,7 +130,7 @@ export default function ActiveMissionPage() {
                   <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
                   Live Mission
                 </p>
-                <div className="text-lg font-black text-foreground tracking-tight">
+                <div className="text-lg font-black text-foreground tracking-tight italic">
                   {mission.type === 'direct' ? 'Direct Delivery' : 'Broadcast Gig'}
                 </div>
               </div>

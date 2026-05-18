@@ -1,166 +1,175 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
-import { useAuth } from "@/components/providers/AuthProvider";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 import { 
+  Radar,
   Package, 
   MapPin, 
   Clock, 
-  DollarSign, 
-  ChevronRight, 
-  Bike,
-  ShieldCheck,
-  AlertCircle,
-  Radar,
   Loader2,
+  AlertCircle,
+  ShieldCheck,
   Navigation
 } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
-// Dynamically import map to avoid SSR issues
-const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { 
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-background flex flex-col items-center justify-center text-muted-foreground gap-4">
-      <div className="w-12 h-12 rounded-full border-4 border-muted border-t-emerald-500 animate-spin" />
-      <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Radar...</p>
-    </div>
-  )
-});
-
-import { useCallback } from "react";
+const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { ssr: false });
 
 export default function RiderDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [gigs, setGigs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [directRequest, setDirectRequest] = useState<any>(null);
   const [countdown, setCountdown] = useState(180);
-  const [loading, setLoading] = useState(true);
 
-  const fetchGigs = useCallback(async (isCompany: boolean) => {
-    setLoading(true);
-    let query = supabase
+  const fetchGigs = useCallback(async () => {
+    const { data, error } = await supabase
       .from('gigs')
       .select('*')
-      .eq('status', 'pending');
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
 
-    if (!isCompany) {
-      query = query.lte('published_to_all_at', new Date().toISOString());
+    if (!error && data) {
+      setGigs(data);
     }
-
-    const { data } = await query.order('created_at', { ascending: false });
-
-    if (data) setGigs(data);
     setLoading(false);
   }, []);
 
-  const handleDecline = useCallback(async () => {
+  useEffect(() => {
+    let isMounted = true;
+
+    // Check for direct requests first
+    const init = async () => {
+       if (isMounted) {
+         setLoading(true);
+         await fetchGigs();
+       }
+    };
+    init();
+
+    // Listen for new gigs
+    const channel = supabase
+      .channel('public:gigs')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'gigs' },
+        () => fetchGigs()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'gigs' },
+        () => fetchGigs()
+      )
+      .subscribe();
+
+    // Listen for direct requests specifically for this rider
+    const directChannel = supabase
+      .channel(`direct_requests:${user?.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'direct_requests',
+          filter: `rider_id=eq.${user?.id}`
+        },
+        (payload) => {
+          if (isMounted) {
+            setDirectRequest(payload.new);
+            setCountdown(180);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'direct_requests',
+          filter: `rider_id=eq.${user?.id}`
+        },
+        (payload) => {
+          if (isMounted && payload.new.status !== 'pending') {
+            setDirectRequest(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+      supabase.removeChannel(directChannel);
+    };
+  }, [user?.id, fetchGigs]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (directRequest && countdown > 0) {
+      timer = setInterval(() => setCountdown(c => c - 1), 1000);
+    }
+    return () => clearInterval(timer);
+  }, [directRequest, countdown]);
+
+  useEffect(() => {
+    if (directRequest && countdown === 0) {
+      const t = setTimeout(() => setDirectRequest(null), 0);
+      return () => clearTimeout(t);
+    }
+  }, [countdown, directRequest]);
+
+  const handleAccept = async (gigId: string, isDirect: boolean) => {
+    if (!user) return;
+
+    const table = isDirect ? 'direct_requests' : 'gigs';
+
+    // 1. Update status and assigned rider
+    const { data: gigData, error: updateError } = await supabase
+      .from(table)
+      .update({
+        status: isDirect ? 'accepted' : 'assigned',
+        ...(isDirect ? {} : { assigned_rider_id: user.id })
+      })
+      .eq('id', gigId)
+      .select()
+      .single();
+    
+    if (updateError) {
+      alert("Gig already taken or error: " + updateError.message);
+      return;
+    }
+
+    // 2. Create Chat Session
+    const { error: chatError } = await supabase
+      .from('chat_sessions')
+      .insert({
+        [isDirect ? 'direct_request_id' : 'gig_id']: gigId,
+        user_id: gigData.user_id,
+        rider_id: user.id,
+        status: 'active'
+      });
+
+    if (chatError) {
+      console.error("Chat session creation error:", chatError);
+    }
+
+    // 3. Redirect
+    setDirectRequest(null);
+    router.push("/rider/active");
+  };
+
+  const handleDecline = async () => {
     if (!directRequest) return;
     await supabase
       .from('direct_requests')
       .update({ status: 'rejected' })
       .eq('id', directRequest.id);
     setDirectRequest(null);
-  }, [directRequest]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    let isCompany = false;
-    let isActive = true;
-
-    const init = async () => {
-      const { data: profile } = await supabase
-        .from('users')
-        .select('is_company_rider')
-        .eq('id', user.id)
-        .single();
-      
-      if (!isActive) return;
-      isCompany = profile?.is_company_rider || false;
-      fetchGigs(isCompany);
-
-      // Subscribe to new broadcast gigs
-      const gigsChannel = supabase
-        .channel('public:gigs')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gigs' }, (payload) => {
-          const newGig = payload.new;
-          const isPublished = new Date(newGig.published_to_all_at) <= new Date();
-          if (isCompany || isPublished) {
-            setGigs((prev) => [newGig, ...prev]);
-          }
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gigs' }, (payload) => {
-          setGigs((prev) => prev.map(g => g.id === payload.new.id ? payload.new : g).filter(g => g.status === 'pending'));
-        })
-        .subscribe();
-
-      // Subscribe to direct requests targeting this rider
-      const directChannel = supabase
-        .channel(`rider:${user.id}:direct_requests`)
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'direct_requests', 
-          filter: `rider_id=eq.${user.id}` 
-        }, (payload) => {
-          if (payload.new.status === 'pending') {
-            setDirectRequest(payload.new);
-            setCountdown(180);
-          }
-        })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'direct_requests',
-          filter: `rider_id=eq.${user.id}`
-        }, (payload) => {
-          if (payload.new.status !== 'pending') {
-            setDirectRequest(null);
-          }
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(gigsChannel);
-        supabase.removeChannel(directChannel);
-      };
-    };
-
-    init();
-    return () => { isActive = false; };
-  }, [user]);
-
-  useEffect(() => {
-    let timer: any;
-    if (directRequest && countdown > 0) {
-      timer = setInterval(() => setCountdown(c => c - 1), 1000);
-    } else if (countdown === 0 && directRequest) {
-      const run = async () => {
-        await handleDecline();
-      };
-      run();
-    }
-    return () => clearInterval(timer);
-  }, [directRequest, countdown, handleDecline]);
-
-  const handleAccept = async (gigId: string, isDirect: boolean) => {
-    const table = isDirect ? 'direct_requests' : 'gigs';
-    const { error } = await supabase
-      .from(table)
-      .update({ status: 'accepted' })
-      .eq('id', gigId);
-    
-    if (!error) {
-      setDirectRequest(null);
-      router.push("/rider/active");
-    } else {
-      alert("Gig already taken or error: " + error.message);
-    }
   };
 
   return (
@@ -184,7 +193,7 @@ export default function RiderDashboard() {
         <div className="flex-1 overflow-y-auto px-6 pb-10 pt-2 lg:pt-8 custom-scrollbar">
           <div className="flex justify-between items-end mb-8">
           <div>
-            <h2 className="text-xl font-black tracking-tight text-foreground mb-1">Tactical Radar</h2>
+            <h2 className="text-xl font-black tracking-tight text-foreground mb-1 italic">Tactical Radar</h2>
             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Missions in your sector</p>
           </div>
           <div className="text-right">
@@ -204,7 +213,7 @@ export default function RiderDashboard() {
               <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border">
                 <Radar className="w-10 h-10 text-muted-foreground/20 animate-pulse" />
               </div>
-              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest px-10 leading-relaxed">
+              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest px-10 leading-relaxed italic">
                 Quiet sector. Move to a glow zone to increase visibility.
               </p>
             </div>
@@ -333,7 +342,7 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
             <Package className="w-7 h-7" />
           </div>
           <div>
-            <h3 className="font-black text-base text-foreground">{gig.description || "General Delivery"}</h3>
+            <h3 className="font-black text-base text-foreground italic">{gig.description || "General Delivery"}</h3>
             <div className="flex items-center gap-2 mt-1">
               <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Broadcast</span>
               <div className="w-1 h-1 rounded-full bg-border" />

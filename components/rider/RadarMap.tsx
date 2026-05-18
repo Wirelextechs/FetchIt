@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo } from "react";
+import { useTheme } from "@/components/providers/ThemeProvider";
 import { MapContainer, TileLayer, Marker, Popup, Circle } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -22,9 +24,6 @@ const gigIcon = L.divIcon({
   iconSize: [24, 24],
   iconAnchor: [12, 12],
 });
-
-import { useMemo } from "react";
-import { useTheme } from "@/components/providers/ThemeProvider";
 
 export default function RadarMap({ gigs }: { gigs: any[] }) {
   const { theme } = useTheme();
