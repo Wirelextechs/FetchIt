@@ -65,7 +65,7 @@ export default function AnalyticsPage() {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-br from-[#1A1C22] to-[#0F1115] p-8 rounded-[48px] border border-white/5 shadow-2xl relative overflow-hidden group"
+            className="bg-card p-8 rounded-[48px] border border-border shadow-2xl relative overflow-hidden group"
           >
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
               <Wallet className="w-32 h-32 text-emerald-500" />
@@ -76,21 +76,21 @@ export default function AnalyticsPage() {
                 <div className="w-6 h-6 bg-emerald-500/20 rounded-lg flex items-center justify-center">
                   <DollarSign className="w-3.5 h-3.5 text-emerald-500" />
                 </div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Moolre Secured Wallet</p>
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Moolre Secured Wallet</p>
               </div>
               
               <div className="flex flex-col gap-6 mb-10">
                 <div>
-                  <p className="text-xs font-bold text-slate-400 mb-2">Available Balance</p>
+                  <p className="text-xs font-bold text-muted-foreground mb-2">Available Balance</p>
                   <div className="flex items-baseline gap-1.5">
                     <span className="text-xl font-black text-emerald-500">GH₵</span>
-                    <span className="text-5xl font-black tracking-tighter text-white">{balance.toFixed(2)}</span>
+                    <span className="text-5xl font-black tracking-tighter text-foreground">{balance.toFixed(2)}</span>
                   </div>
                 </div>
                 
                 <div className="flex gap-10">
-                  <div className="bg-white/5 px-4 py-2 rounded-2xl border border-white/5">
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">In Escrow</p>
+                  <div className="bg-muted/50 px-4 py-2 rounded-2xl border border-border">
+                    <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">In Escrow</p>
                     <p className="text-base font-black text-amber-500 tracking-tight">GH₵ {pending.toFixed(2)}</p>
                   </div>
                 </div>
@@ -104,9 +104,9 @@ export default function AnalyticsPage() {
           </motion.div>
 
           {/* Performance Chart */}
-          <div className="bg-[#0F1115] border border-white/5 p-8 rounded-[40px] shadow-xl">
+          <div className="bg-card border border-border p-8 rounded-[40px] shadow-xl">
             <div className="flex justify-between items-center mb-8">
-              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">7-Day Revenue Trend</h2>
+              <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">7-Day Revenue Trend</h2>
               <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">+12.4% vs last week</span>
             </div>
             <div className="h-64 w-full">
@@ -128,7 +128,7 @@ export default function AnalyticsPage() {
                   />
                   <YAxis hide />
                   <Tooltip 
-                    contentStyle={{ backgroundColor: '#0F1115', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', fontSize: '10px', fontWeight: '900', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                    contentStyle={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderRadius: '20px', fontSize: '10px', fontWeight: '900', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
                     itemStyle={{ color: '#10b981' }}
                     cursor={{ stroke: '#10b981', strokeWidth: 1, strokeDasharray: '5 5' }}
                   />
@@ -150,7 +150,7 @@ export default function AnalyticsPage() {
         <div className="space-y-8">
           {/* Today's Hustle */}
           <div className="space-y-4">
-            <h2 className="text-sm font-black tracking-[0.15em] uppercase text-slate-500 ml-2 flex items-center gap-2">
+            <h2 className="text-sm font-black tracking-[0.15em] uppercase text-muted-foreground ml-2 flex items-center gap-2">
               <TrendingUp className="w-4 h-4 text-emerald-500" />
               Today's Performance
             </h2>
@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
 
           {/* Account Health */}
           <div className="space-y-4">
-            <h2 className="text-sm font-black tracking-[0.15em] uppercase text-slate-500 ml-2">Mission Integrity</h2>
+            <h2 className="text-sm font-black tracking-[0.15em] uppercase text-muted-foreground ml-2">Mission Integrity</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <HealthMetric label="Rating" value="4.9" icon={Star} />
               <HealthMetric label="Acceptance" value="98%" icon={Percent} />
@@ -186,14 +186,14 @@ function StatCard({ label, value, sub, icon: Icon, color }: any) {
   };
 
   return (
-    <div className="bg-[#16181D] border border-white/5 p-5 rounded-[32px] group">
+    <div className="bg-card border border-border p-5 rounded-[32px] group">
       <div className={`w-10 h-10 ${colors[color]} rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110`}>
         <Icon className="w-5 h-5" />
       </div>
-      <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">{label}</p>
+      <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">{label}</p>
       <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-black text-white tracking-tighter">{value}</span>
-        <span className="text-[10px] font-bold text-slate-700">{sub}</span>
+        <span className="text-2xl font-black text-foreground tracking-tighter">{value}</span>
+        <span className="text-[10px] font-bold text-muted-foreground">{sub}</span>
       </div>
     </div>
   );
@@ -201,12 +201,12 @@ function StatCard({ label, value, sub, icon: Icon, color }: any) {
 
 function HealthMetric({ label, value, icon: Icon, warning }: any) {
   return (
-    <div className="flex flex-col items-center text-center p-5 bg-[#16181D] rounded-[32px] border border-white/5">
+    <div className="flex flex-col items-center text-center p-5 bg-card rounded-[32px] border border-border">
       <div className={`w-12 h-12 rounded-full flex items-center justify-center mb-3 ${warning ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.05)]'}`}>
         <Icon className="w-6 h-6" />
       </div>
-      <p className="text-xl font-black text-white tabular-nums">{value}</p>
-      <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-0.5">{label}</p>
+      <p className="text-xl font-black text-foreground tabular-nums">{value}</p>
+      <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-0.5">{label}</p>
     </div>
   );
 }

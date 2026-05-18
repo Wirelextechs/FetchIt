@@ -1,150 +1,215 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase/client";
-import { useAuth } from "@/components/providers/AuthProvider";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback } from "react";
 import { 
+  Radar,
   Package, 
   MapPin, 
   Clock, 
-  DollarSign, 
-  ChevronRight, 
-  Bike,
-  ShieldCheck,
-  AlertCircle,
-  Radar,
   Loader2,
-  Navigation
+  AlertCircle,
+  ShieldCheck,
+  Navigation,
+  DollarSign,
+  Edit3
 } from "lucide-react";
+import { supabase } from "@/lib/supabase/client";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
+import { RiderLazyLogin } from "@/components/auth/RiderLazyLogin";
+import { KycPromptModal } from "@/components/kyc/KycPromptModal";
 
-// Dynamically import map to avoid SSR issues
-const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { 
-  ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-slate-900 flex flex-col items-center justify-center text-slate-600 gap-4">
-      <div className="w-12 h-12 rounded-full border-4 border-slate-800 border-t-emerald-500 animate-spin" />
-      <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Radar...</p>
-    </div>
-  )
-});
+const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { ssr: false });
 
 export default function RiderDashboard() {
   const { user } = useAuth();
   const router = useRouter();
   const [gigs, setGigs] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [directRequest, setDirectRequest] = useState<any>(null);
   const [countdown, setCountdown] = useState(180);
-  const [loading, setLoading] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
+  
+  // Zone Pricing Matrix States
+  const [priceWithinCity, setPriceWithinCity] = useState(15);
+  const [priceAroundCity, setPriceAroundCity] = useState(30);
+  const [priceOutsideCity, setPriceOutsideCity] = useState(50);
 
+  const fetchGigs = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('gigs')
+      .select('*')
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      setGigs(data);
+    }
+    setLoading(false);
+  }, []);
+
+  // Fetch user's profile verification status and zone rates
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      setIsVerified(false);
+      return;
+    }
 
-    let isCompany = false;
-
-    const init = async () => {
-      const { data: profile } = await supabase
+    const fetchProfile = async () => {
+      const { data } = await supabase
         .from('users')
-        .select('is_company_rider')
+        .select('is_verified, price_within_city, price_around_city, price_outside_city')
         .eq('id', user.id)
         .single();
       
-      isCompany = profile?.is_company_rider || false;
-      fetchGigs(isCompany);
-
-      // Subscribe to new broadcast gigs
-      const gigsChannel = supabase
-        .channel('public:gigs')
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'gigs' }, (payload) => {
-          const newGig = payload.new;
-          const isPublished = new Date(newGig.published_to_all_at) <= new Date();
-          if (isCompany || isPublished) {
-            setGigs((prev) => [newGig, ...prev]);
-          }
-        })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'gigs' }, (payload) => {
-          setGigs((prev) => prev.map(g => g.id === payload.new.id ? payload.new : g).filter(g => g.status === 'pending'));
-        })
-        .subscribe();
-
-      // Subscribe to direct requests targeting this rider
-      const directChannel = supabase
-        .channel(`rider:${user.id}:direct_requests`)
-        .on('postgres_changes', { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'direct_requests', 
-          filter: `rider_id=eq.${user.id}` 
-        }, (payload) => {
-          if (payload.new.status === 'pending') {
-            setDirectRequest(payload.new);
-            setCountdown(180);
-          }
-        })
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'direct_requests',
-          filter: `rider_id=eq.${user.id}`
-        }, (payload) => {
-          if (payload.new.status !== 'pending') {
-            setDirectRequest(null);
-          }
-        })
-        .subscribe();
-
-      return () => {
-        supabase.removeChannel(gigsChannel);
-        supabase.removeChannel(directChannel);
-      };
+      if (data) {
+        setIsVerified(!!data.is_verified);
+        if (data.price_within_city !== null) setPriceWithinCity(Number(data.price_within_city));
+        if (data.price_around_city !== null) setPriceAroundCity(Number(data.price_around_city));
+        if (data.price_outside_city !== null) setPriceOutsideCity(Number(data.price_outside_city));
+      }
     };
 
-    const cleanup = init();
-    return () => { cleanup.then(c => c && c()); };
+    fetchProfile();
   }, [user]);
 
   useEffect(() => {
-    let timer: any;
+    let isMounted = true;
+
+    // Check for direct requests first
+    const init = async () => {
+       if (isMounted) {
+         setLoading(true);
+         await fetchGigs();
+       }
+     };
+    init();
+
+    // Listen for new gigs
+    const channel = supabase
+      .channel('public:gigs')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'gigs' },
+        () => fetchGigs()
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'gigs' },
+        () => fetchGigs()
+      )
+      .subscribe();
+
+    // Listen for direct requests specifically for this rider (only if authenticated)
+    let directChannel: any = null;
+    if (user) {
+      directChannel = supabase
+        .channel(`direct_requests:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'direct_requests',
+            filter: `rider_id=eq.${user.id}`
+          },
+          (payload) => {
+            if (isMounted) {
+              setDirectRequest(payload.new);
+              setCountdown(180);
+            }
+          }
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'direct_requests',
+            filter: `rider_id=eq.${user.id}`
+          },
+          (payload) => {
+            if (isMounted && payload.new.status !== 'pending') {
+              setDirectRequest(null);
+            }
+          }
+        )
+        .subscribe();
+    }
+
+    return () => {
+      isMounted = false;
+      supabase.removeChannel(channel);
+      if (directChannel) {
+        supabase.removeChannel(directChannel);
+      }
+    };
+  }, [user?.id, fetchGigs]);
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (directRequest && countdown > 0) {
       timer = setInterval(() => setCountdown(c => c - 1), 1000);
-    } else if (countdown === 0 && directRequest) {
-      handleDecline();
     }
     return () => clearInterval(timer);
   }, [directRequest, countdown]);
 
-  const fetchGigs = async (isCompany: boolean) => {
-    setLoading(true);
-    let query = supabase
-      .from('gigs')
-      .select('*')
-      .eq('status', 'pending');
-
-    if (!isCompany) {
-      query = query.lte('published_to_all_at', new Date().toISOString());
+  useEffect(() => {
+    if (directRequest && countdown === 0) {
+      const t = setTimeout(() => setDirectRequest(null), 0);
+      return () => clearTimeout(t);
     }
-
-    const { data } = await query.order('created_at', { ascending: false });
-    
-    if (data) setGigs(data);
-    setLoading(false);
-  };
+  }, [countdown, directRequest]);
 
   const handleAccept = async (gigId: string, isDirect: boolean) => {
-    const table = isDirect ? 'direct_requests' : 'gigs';
-    const { error } = await supabase
-      .from(table)
-      .update({ status: 'accepted' })
-      .eq('id', gigId);
-    
-    if (!error) {
-      setDirectRequest(null);
-      router.push("/rider/active");
-    } else {
-      alert("Gig already taken or error: " + error.message);
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
     }
+    if (!isVerified) {
+      setIsKycModalOpen(true);
+      return;
+    }
+
+    const table = isDirect ? 'direct_requests' : 'gigs';
+
+    // 1. Update status and assigned rider
+    const { data: gigData, error: updateError } = await supabase
+      .from(table)
+      .update({
+        status: isDirect ? 'accepted' : 'assigned',
+        ...(isDirect ? {} : { assigned_rider_id: user.id })
+      })
+      .eq('id', gigId)
+      .select()
+      .single();
+    
+    if (updateError) {
+      alert("Gig already taken or error: " + updateError.message);
+      return;
+    }
+
+    // 2. Create Chat Session
+    const { error: chatError } = await supabase
+      .from('chat_sessions')
+      .insert({
+        [isDirect ? 'direct_request_id' : 'gig_id']: gigId,
+        user_id: gigData.user_id,
+        rider_id: user.id,
+        status: 'active'
+      });
+
+    if (chatError) {
+      console.error("Chat session creation error:", chatError);
+    }
+
+    // 3. Redirect
+    setDirectRequest(null);
+    router.push("/rider/active");
   };
 
   const handleDecline = async () => {
@@ -159,9 +224,48 @@ export default function RiderDashboard() {
   return (
     <div className="flex flex-col lg:flex-row flex-1 h-full overflow-hidden relative">
       {/* Tactical Radar Map */}
-      <div className="h-[45vh] lg:h-full lg:flex-1 relative border-r border-white/5 shrink-0">
+      <div className="h-[45vh] lg:h-full lg:flex-1 relative border-r border-border shrink-0">
         <RadarMap gigs={gigs} />
-        <div className="absolute bottom-20 lg:bottom-12 left-6 z-[400] bg-slate-900/80 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10 flex items-center gap-3">
+        
+        {/* Current Rates HUD Widget */}
+        <div className="absolute top-6 left-6 right-6 z-[400] glass p-4 rounded-[24px] border border-border flex flex-wrap gap-4 items-center justify-between shadow-2xl backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <DollarSign className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">Your Zone Rates</p>
+              <h3 className="text-[11px] font-bold text-foreground mt-0.5">Techiman Delivery Pricing</h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Central</span>
+              <span className="text-xs font-black text-emerald-500 italic">GH₵{priceWithinCity}</span>
+            </div>
+            <div className="w-[1px] h-6 bg-border" />
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Around</span>
+              <span className="text-xs font-black text-emerald-500 italic">GH₵{priceAroundCity}</span>
+            </div>
+            <div className="w-[1px] h-6 bg-border" />
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Outside</span>
+              <span className="text-xs font-black text-emerald-500 italic">GH₵{priceOutsideCity}</span>
+            </div>
+            <div className="w-[1px] h-6 bg-border" />
+            <button 
+              onClick={() => router.push("/rider/settings")}
+              className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-xl transition-all active:scale-95 flex items-center justify-center"
+              title="Edit Rates"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="absolute bottom-20 lg:bottom-12 left-6 z-[400] glass px-4 py-2 rounded-2xl border border-border flex items-center gap-3">
           <div className="relative">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
             <div className="absolute inset-0 w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping" />
@@ -171,44 +275,44 @@ export default function RiderDashboard() {
       </div>
 
       {/* Gig Feed */}
-      <div className="flex-1 flex flex-col bg-[#0F1115] rounded-t-[40px] lg:rounded-none -mt-12 lg:mt-0 relative z-20 overflow-hidden shadow-[0_-20px_60px_rgba(0,0,0,0.8)] lg:shadow-none border-t lg:border-t-0 border-white/5 lg:max-w-md xl:max-w-lg">
-        <div className="w-12 h-1.5 bg-slate-800 rounded-full mx-auto my-4 shrink-0 lg:hidden opacity-50" />
+      <div className="flex-1 flex flex-col bg-card rounded-t-[40px] lg:rounded-none -mt-12 lg:mt-0 relative z-20 overflow-hidden shadow-[0_-20px_60px_rgba(0,0,0,0.1)] lg:shadow-none border-t lg:border-t-0 border-border lg:max-w-md xl:max-w-lg">
+        <div className="w-12 h-1.5 bg-muted rounded-full mx-auto my-4 shrink-0 lg:hidden opacity-50" />
         
         <div className="flex-1 overflow-y-auto px-6 pb-10 pt-2 lg:pt-8 custom-scrollbar">
           <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-xl font-black tracking-tight text-white mb-1">Tactical Radar</h2>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Active Missions in your sector</p>
+            <div>
+              <h2 className="text-xl font-black tracking-tight text-slate-950 dark:text-white mb-1 italic">Tactical Radar</h2>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Missions in your sector</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-emerald-500">{gigs.length}</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Gigs Ready</span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-black text-emerald-500">{gigs.length}</span>
-            <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block">Gigs Ready</span>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {loading ? (
-            <div className="py-20 flex flex-col items-center gap-4">
-              <Loader2 className="w-8 h-8 text-slate-700 animate-spin" />
-              <p className="text-[10px] font-black text-slate-700 uppercase tracking-widest">Updating Feed...</p>
-            </div>
-          ) : gigs.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="w-20 h-20 bg-slate-900 rounded-3xl flex items-center justify-center mx-auto mb-6 border border-white/5">
-                <Radar className="w-10 h-10 text-slate-700 animate-pulse" />
+          <div className="grid grid-cols-1 gap-4">
+            {loading ? (
+              <div className="py-20 flex flex-col items-center gap-4">
+                <Loader2 className="w-8 h-8 text-muted-foreground/30 animate-spin" />
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Updating Feed...</p>
               </div>
-              <p className="text-slate-500 text-sm font-bold uppercase tracking-widest px-10 leading-relaxed">
-                Quiet sector. Move to a glow zone to increase visibility.
-              </p>
-            </div>
-          ) : (
-            gigs.map((gig) => (
-              <GigCard key={gig.id} gig={gig} onAccept={() => handleAccept(gig.id, false)} />
-            ))
-          )}
+            ) : gigs.length === 0 ? (
+              <div className="py-16 text-center">
+                <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border">
+                  <Radar className="w-10 h-10 text-muted-foreground/20 animate-pulse" />
+                </div>
+                <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest px-10 leading-relaxed italic">
+                  Quiet sector. Move to a glow zone to increase visibility.
+                </p>
+              </div>
+            ) : (
+              gigs.map((gig) => (
+                <GigCard key={gig.id} gig={gig} isVerified={isVerified} onAccept={() => handleAccept(gig.id, false)} />
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Direct Booking Takeover */}
       <AnimatePresence>
@@ -302,14 +406,35 @@ export default function RiderDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Guest Interceptor Lazy Login Modal */}
+      <RiderLazyLogin 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onSuccess={() => {
+          setIsLoginModalOpen(false);
+          window.location.reload();
+        }}
+      />
+
+      {/* KYC Prompt Modal */}
+      <KycPromptModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+      />
     </div>
   );
 }
 
-function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
+function GigCard({ gig, onAccept, isVerified }: { gig: any, onAccept: () => void, isVerified: boolean }) {
+  const { user } = useAuth();
   const [claiming, setClaiming] = useState(false);
 
   const handleClaim = () => {
+    if (!user || !isVerified) {
+      onAccept();
+      return;
+    }
     setClaiming(true);
     onAccept();
   };
@@ -318,7 +443,7 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-slate-900/40 backdrop-blur-xl border border-white/5 p-6 rounded-[32px] relative overflow-hidden group shadow-xl"
+      className="bg-muted/50 border border-border p-6 rounded-[32px] relative overflow-hidden group shadow-sm"
     >
       <div className="flex justify-between items-start mb-6 relative z-10">
         <div className="flex items-center gap-4">
@@ -326,10 +451,10 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
             <Package className="w-7 h-7" />
           </div>
           <div>
-            <h3 className="font-black text-base text-slate-100">{gig.description || "General Delivery"}</h3>
+            <h3 className="font-black text-base text-foreground italic">{gig.description || "General Delivery"}</h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Broadcast</span>
-              <div className="w-1 h-1 rounded-full bg-slate-700" />
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Broadcast</span>
+              <div className="w-1 h-1 rounded-full bg-border" />
               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-1">
                 <Clock className="w-2.5 h-2.5" /> 
                 {new Date(gig.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -340,18 +465,18 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
         <div className="text-right">
           <div className="flex items-baseline gap-0.5">
             <span className="text-[10px] font-black text-emerald-500">GH₵</span>
-            <span className="text-2xl font-black text-white tracking-tighter">{Number(gig.offered_price || 0).toFixed(2)}</span>
+            <span className="text-2xl font-black text-foreground tracking-tighter">{Number(gig.offered_price || 0).toFixed(2)}</span>
           </div>
-          <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">Target Pay</p>
+          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Target Pay</p>
         </div>
       </div>
 
       <div className="space-y-4 mb-8 relative z-10 px-2">
-        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+        <div className="flex items-center gap-4 text-xs font-bold text-foreground/70">
           <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
           <span className="truncate">{gig.pickup_landmark}</span>
         </div>
-        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+        <div className="flex items-center gap-4 text-xs font-bold text-foreground/70">
           <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
           <span className="truncate">{gig.dropoff_landmark}</span>
         </div>
@@ -360,7 +485,7 @@ function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
       <button 
         onClick={handleClaim}
         disabled={claiming}
-        className="w-full bg-emerald-600 text-white font-black py-4 rounded-[20px] text-[10px] uppercase tracking-[0.2em] shadow-[0_10px_20px_rgba(16,185,129,0.15)] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:bg-slate-800 disabled:text-slate-600"
+        className="w-full bg-emerald-600 text-white font-black py-4 rounded-[20px] text-[10px] uppercase tracking-[0.2em] shadow-[0_10px_20px_rgba(16,185,129,0.15)] active:scale-95 transition-all flex items-center justify-center gap-2 disabled:bg-muted disabled:text-muted-foreground"
       >
         {claiming ? <Loader2 className="w-4 h-4 animate-spin" /> : "Claim Mission"}
       </button>

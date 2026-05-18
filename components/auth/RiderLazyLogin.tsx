@@ -5,21 +5,20 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Lock, Phone as PhoneIcon, ArrowRight, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 
-interface LazyAuthModalProps {
+interface RiderLazyLoginProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
 }
 
-export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps) {
+export function RiderLazyLogin({ isOpen, onClose, onSuccess }: RiderLazyLoginProps) {
   const [step, setStep] = useState<"phone" | "pin">("phone");
   const [phone, setPhone] = useState("");
   const [pin, setPin] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Use a real-looking domain so Supabase's email validator accepts it.
-  // The .local TLD is RFC-invalid and rejected by Supabase's backend.
+  // Email/Password mapping for seamless lazy account creation
   const formatEmail = (p: string) => `${p}@auth.fetchit.com`;
   const formatPassword = (p: string) => `fi-${p}-secure`;
 
@@ -45,7 +44,9 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
     const password = formatPassword(pin);
 
     try {
-      // Try to sign in first
+      let userId: string | null = null;
+
+      // 1. Try to sign in first
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -53,8 +54,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
 
       if (signInError) {
         if (signInError.message.includes("Invalid login credentials")) {
-          // If invalid login credentials, it means the user doesn't exist or PIN is wrong.
-          // Let's try to sign up instead (since it's a passwordless/seamless UX, new users just "login" and it creates their account).
+          // 2. If user doesn't exist, create a new account
           const { error: signUpError, data: signUpData } = await supabase.auth.signUp({
             email,
             password,
@@ -66,30 +66,46 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
             } else {
                setError(signUpError.message);
             }
+            setLoading(false);
+            return;
           } else if (signUpData.user) {
-            // Sync the new auth user to public.users table
-            // This satisfies the gigs_user_id_fkey foreign key constraint
+            userId = signUpData.user.id;
+            // Sync new user to public.users table
             await fetch('/api/auth/sync-user', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                userId: signUpData.user.id,
-                phone: phone,
-              }),
+              body: JSON.stringify({ userId, phone }),
             });
-            onSuccess();
           }
         } else {
           setError(signInError.message);
+          setLoading(false);
+          return;
         }
-      } else {
-        // Success Sign In — also ensure public.users record exists (backfill)
+      } else if (data.user) {
+        userId = data.user.id;
+        // Backfill public.users record if missing
         await fetch('/api/auth/sync-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: data.user!.id, phone }),
+          body: JSON.stringify({ userId, phone }),
         });
+      }
+
+      // 3. Set role = 'rider' and is_verified = false for this authenticated user
+      if (userId) {
+        const { error: roleError } = await supabase
+          .from('users')
+          .update({ role: 'rider', is_verified: false })
+          .eq('id', userId);
+
+        if (roleError) {
+          console.error("Error setting rider role:", roleError);
+        }
+        
         onSuccess();
+      } else {
+        setError("Authentication failed. Please try again.");
       }
     } catch (err: any) {
       setError(err.message);
@@ -107,7 +123,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/60 backdrop-blur-md"
           />
           
           <motion.div
@@ -115,19 +131,19 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: "100%", opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="relative w-full max-w-md glass rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden p-6 pb-8 border-border"
+            className="relative w-full max-w-md bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-t-[32px] sm:rounded-[32px] shadow-2xl overflow-hidden p-6 pb-8 border border-slate-200/50 dark:border-white/10"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 bg-muted/50 hover:bg-muted rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 hover:bg-slate-100 dark:hover:bg-white/10 rounded-full transition-colors"
             >
-              <X className="w-5 h-5 text-muted-foreground" />
+              <X className="w-5 h-5 text-slate-500" />
             </button>
 
-            <div className="text-center mb-8 mt-2">
-              <h2 className="text-2xl font-bold text-foreground">Welcome to FetchIt</h2>
-              <p className="text-muted-foreground text-sm mt-1">
-                {step === "phone" ? "Enter your phone number to secure your order." : "Enter your 4-digit PIN."}
+            <div className="text-center mb-8 mt-2 space-y-2">
+              <h2 className="text-2xl font-black tracking-tight text-slate-950 dark:text-white">Become a FetchIt Rider</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-xs font-semibold">
+                {step === "phone" ? "Enter your phone number to start earning in Techiman." : "Setup a 4-digit security PIN."}
               </p>
             </div>
 
@@ -138,10 +154,10 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                   initial={{ x: -20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: -20, opacity: 0 }}
-                  className="space-y-4"
+                  className="space-y-6"
                 >
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <PhoneIcon className="w-5 h-5" />
                     </span>
                     <input
@@ -149,18 +165,18 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                       value={phone}
                       onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
                       placeholder="e.g. 0241234567"
-                      className="w-full pl-12 pr-4 py-4 bg-background/50 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-lg font-medium transition-all text-foreground"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-lg font-bold transition-all text-slate-950 dark:text-white"
                       autoFocus
                     />
                   </div>
-                  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+                  {error && <p className="text-red-500 text-xs font-bold text-center">{error}</p>}
                   <button
                     onClick={handleNext}
                     disabled={phone.length < 10}
-                    className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:bg-emerald-700 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-600/20"
+                    className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-2 hover:bg-emerald-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-600/20 active:scale-95"
                   >
                     <span>Continue</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="w-4 h-4" />
                   </button>
                 </motion.div>
               ) : (
@@ -169,10 +185,10 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                   initial={{ x: 20, opacity: 0 }}
                   animate={{ x: 0, opacity: 1 }}
                   exit={{ x: 20, opacity: 0 }}
-                  className="space-y-4"
+                  className="space-y-6"
                 >
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
                       <Lock className="w-5 h-5" />
                     </span>
                     <input
@@ -182,20 +198,25 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                       value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
                       placeholder="••••"
-                      className="w-full pl-12 pr-4 py-4 bg-background/50 border border-border rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-center text-2xl tracking-[1em] font-black transition-all text-foreground"
+                      className="w-full pl-12 pr-4 py-4 bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-2 focus:ring-emerald-500 outline-none text-center text-2xl tracking-[1em] font-black transition-all text-slate-950 dark:text-white"
                       autoFocus
                     />
                   </div>
-                  {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wide text-center leading-normal max-w-xs mx-auto">
+                    By entering your number to continue, you agree to register as a FetchIt Delivery Rider / Shopper.
+                  </p>
+
+                  {error && <p className="text-red-500 text-xs font-bold text-center">{error}</p>}
                   <button
                     onClick={handleAuthenticate}
                     disabled={pin.length < 4 || loading}
-                    className="w-full bg-foreground text-background py-4 rounded-2xl font-bold flex items-center justify-center space-x-2 hover:opacity-90 disabled:opacity-50 transition-colors shadow-lg shadow-foreground/20"
+                    className="w-full bg-slate-950 dark:bg-white text-white dark:text-slate-950 py-4 rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center space-x-2 hover:opacity-90 disabled:opacity-50 transition-all shadow-lg active:scale-95"
                   >
                     {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <span>Secure Login</span>
+                      <span>Agree & Secure Login</span>
                     )}
                   </button>
                   <button
@@ -203,7 +224,7 @@ export function LazyAuthModal({ isOpen, onClose, onSuccess }: LazyAuthModalProps
                       setStep("phone");
                       setError(null);
                     }}
-                    className="w-full text-muted-foreground text-sm py-2 hover:text-foreground transition-colors"
+                    className="w-full text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider py-2 hover:text-slate-900 dark:hover:text-white transition-colors"
                   >
                     Back to Phone
                   </button>

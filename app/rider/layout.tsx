@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -10,38 +10,96 @@ import {
   UserCircle, 
   Power, 
   AlertOctagon, 
-  DollarSign
+  DollarSign,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { RiderLazyLogin } from "@/components/auth/RiderLazyLogin";
+import { KycPromptModal } from "@/components/kyc/KycPromptModal";
 
 export default function RiderLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isOnline, setIsOnline] = useState(false);
   const [earnings, setEarnings] = useState(0.00);
+  const [checkingRole, setCheckingRole] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      fetchRiderStatus();
-    }
-  }, [user]);
-
-  const fetchRiderStatus = async () => {
+  const fetchRiderStatus = useCallback(async (userId: string, isActive: boolean) => {
     const { data } = await supabase
       .from('users')
       .select('is_online, wallet_balance')
-      .eq('id', user?.id)
+      .eq('id', userId)
       .single();
     
-    if (data) {
+    if (isActive && data) {
       setIsOnline(data.is_online);
       setEarnings(Number(data.wallet_balance || 0));
     }
-  };
+  }, []);
+
+  // ── Layout Guard: guest users are allowed, users with other roles are blocked ──
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setCheckingRole(false);
+      return;
+    }
+
+    const checkRole = async () => {
+      const { data } = await supabase
+        .from('users')
+        .select('role, is_verified')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        if (data.role !== 'rider') {
+          router.push('/user/explore');
+        } else {
+          setIsVerified(!!data.is_verified);
+          setCheckingRole(false);
+        }
+      } else {
+        setCheckingRole(false);
+      }
+    };
+
+    checkRole();
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    let isActive = true;
+    if (user) {
+      // Small delay to avoid synchronous state update during render cycle
+      const timeoutId = setTimeout(() => {
+        if (isActive) {
+          fetchRiderStatus(user.id, isActive);
+        }
+      }, 0);
+      return () => {
+        isActive = false;
+        clearTimeout(timeoutId);
+      };
+    }
+    return () => { isActive = false; };
+  }, [user, fetchRiderStatus]);
 
   const toggleOnline = async () => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    if (!isVerified) {
+      setIsKycModalOpen(true);
+      return;
+    }
     const nextStatus = !isOnline;
     const { error } = await supabase
       .from('users')
@@ -52,7 +110,14 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   };
 
   const triggerSOS = async () => {
-    if (!user) return;
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
+    if (!isVerified) {
+      setIsKycModalOpen(true);
+      return;
+    }
     if (confirm("🚨 Trigger Emergency SOS? This will alert dispatch and pause your active gigs.")) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const { error } = await supabase
@@ -80,43 +145,51 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     { href: "/rider/profile", label: "Profile", icon: UserCircle },
   ];
 
+  if (authLoading || (user && checkingRole)) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen flex flex-col bg-[#0F1115] text-white w-full relative overflow-hidden font-sans">
+    <div className="h-screen flex flex-col bg-background text-foreground w-full relative overflow-hidden font-sans">
       {/* Top Header */}
-      <header className="p-6 pt-10 bg-slate-900/40 backdrop-blur-2xl border-b border-white/5 shrink-0 z-[100]">
-        <div className="flex justify-between items-center mb-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-600'}`} />
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-              {isOnline ? 'Active on Radar' : 'System Offline'}
+      <header className="p-8 pt-12 bg-card border-b border-border shrink-0 z-[100]">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <div className={`w-3 h-3 rounded-full ${isOnline ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-muted-foreground/30'}`} />
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground">
+              {isOnline ? 'Live Command' : 'System Standby'}
             </span>
           </div>
           <button 
             onClick={toggleOnline}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all duration-500 ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-black text-[9px] uppercase tracking-widest transition-all duration-500 border ${
               isOnline 
-                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30' 
-                : 'bg-slate-800 text-slate-400 border border-white/5'
+                ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/30'
+                : 'glass text-muted-foreground border-border'
             }`}
           >
-            <Power className="w-3 h-3" />
-            {isOnline ? 'Go Offline' : 'Go Online'}
+            <Power className="w-3.5 h-3.5" />
+            {isOnline ? 'Signal Off' : 'Engage'}
           </button>
         </div>
 
         <div className="flex justify-between items-end">
           <div>
-            <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.15em] mb-1">Total Payout Balance</p>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-bold text-emerald-500">GH₵</span>
-              <span className="text-3xl font-black tracking-tighter">{earnings.toFixed(2)}</span>
+            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-2">Command Center Balance</p>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-xs font-black text-emerald-500">GHS</span>
+              <span className="text-4xl font-black tracking-tighter text-foreground drop-shadow-[0_0_15px_rgba(0,0,0,0.1)]">{earnings.toFixed(2)}</span>
             </div>
           </div>
           <button 
             onClick={triggerSOS}
-            className="w-12 h-12 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_10px_20px_rgba(244,63,94,0.1)] group"
+            className="w-14 h-14 glass border border-rose-500/30 rounded-2xl flex items-center justify-center text-rose-500 active:scale-90 transition-all shadow-[0_0_30px_rgba(244,63,94,0.15)] group"
           >
-            <AlertOctagon className="w-6 h-6 group-active:scale-110 transition-transform" />
+            <AlertOctagon className="w-7 h-7 group-active:scale-110 transition-transform" />
           </button>
         </div>
       </header>
@@ -127,17 +200,26 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-[#0F1115]/90 backdrop-blur-2xl border-t border-white/5 safe-area-bottom z-[100] flex justify-center shrink-0">
+      <nav className="bg-card border-t border-border safe-area-bottom z-[100] flex justify-center shrink-0">
         <div className="w-full max-w-lg flex justify-around items-center h-20 px-4">
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;
+
+            const handleNavClick = (e: React.MouseEvent) => {
+              if (link.href === "/rider/profile" && !user) {
+                e.preventDefault();
+                setIsLoginModalOpen(true);
+              }
+            };
+
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={handleNavClick}
                 className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-2xl relative transition-all duration-300 ${
-                  isActive ? 'text-emerald-500' : 'text-slate-500 hover:text-slate-300'
+                  isActive ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
                 {isActive && (
@@ -159,6 +241,22 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
         <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full" />
         <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full" />
       </div>
+
+      {/* Rider Lazy Login Modal */}
+      <RiderLazyLogin 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onSuccess={() => {
+          setIsLoginModalOpen(false);
+          window.location.reload();
+        }}
+      />
+
+      {/* KYC Prompt Modal */}
+      <KycPromptModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+      />
     </div>
   );
 }

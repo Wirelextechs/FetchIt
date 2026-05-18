@@ -1,236 +1,93 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
-import { WalletWidget, WalletStatus } from "@/components/chat/WalletWidget";
-import { ChatTimeline, Message } from "@/components/chat/ChatTimeline";
-import { ChatInput } from "@/components/chat/ChatInput";
-import { ArrowLeft, Phone, MoreVertical, Loader2, CheckCircle2 } from "lucide-react";
+import { use, useEffect, useState } from "react";
+import { ChatRoom } from "@/components/chat/ChatRoom";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { Loader2, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
-import { useAuth } from "@/components/providers/AuthProvider";
 
-export default function ChatPage(props: { params: Promise<{ id: string }> }) {
-  const { user } = useAuth();
+export default function UserChatPage(props: { params: Promise<{ id: string }> }) {
+  const { user, loading: authLoading } = useAuth();
   const params = use(props.params);
-  const sessionId = params.id;
-
-  const [walletStatus, setWalletStatus] = useState<WalletStatus>("awaiting_funds");
-  const [balance, setBalance] = useState(0);
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [session, setSession] = useState<any>(null);
+  const rawId = params.id;
+  const [role, setRole] = useState<'user' | 'rider' | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const currentUserId = user?.id;
+  const [actualSessionId, setActualSessionId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!currentUserId) return;
+    if (!user) return;
 
-    const fetchInitialData = async () => {
-      setLoading(true);
-      
-      // 1. Fetch Session Info
-      const { data: sessionData } = await supabase
+    const resolveSession = async () => {
+      console.log(`[ChatResolve] Attempting to resolve session for ID: ${rawId}`);
+
+      const { data, error } = await supabase
         .from('chat_sessions')
-        .select(`
-          *,
-          gigs:gig_id (*)
-        `)
-        .eq('id', sessionId)
-        .single();
-      
-      if (sessionData) {
-        setSession(sessionData);
+        .select('id, user_id, rider_id, status')
+        .or(`id.eq.${rawId},gig_id.eq.${rawId},direct_request_id.eq.${rawId}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error("[ChatResolve] Supabase error:", error);
       }
 
-      // 2. Fetch messages
-      const { data: initialMessages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('session_id', sessionId)
-        .order('created_at', { ascending: true });
-        
-      if (initialMessages) {
-        setMessages(initialMessages);
-      }
+      if (data) {
+        console.log("[ChatResolve] Session found:", data.id, "Status:", data.status);
+        setActualSessionId(data.id);
 
-      // 3. Fetch wallet state
-      const { data: walletData } = await supabase
-        .from('chat_wallets')
-        .select('*')
-        .eq('session_id', sessionId)
-        .single();
-
-      if (walletData) {
-        setWalletStatus(walletData.status);
-        setBalance(Number(walletData.balance));
+        if (data.user_id === user.id) {
+          setRole('user');
+        } else if (data.rider_id === user.id) {
+          setRole('rider');
+        } else {
+          console.warn("[ChatResolve] User is not a participant. User:", user.id, "Participants:", data.user_id, data.rider_id);
+        }
+      } else {
+        console.warn("[ChatResolve] No session found for this ID.");
       }
-      
       setLoading(false);
     };
 
-    fetchInitialData();
+    resolveSession();
+  }, [user, rawId]);
 
-    // 4. Set up Real-time Subscriptions
-    const messagesChannel = supabase
-      .channel(`chat:${sessionId}:messages`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `session_id=eq.${sessionId}` },
-        (payload) => {
-          setMessages((prev) => {
-            if (prev.find(m => m.id === payload.new.id)) return prev;
-            return [...prev, payload.new as Message];
-          });
-        }
-      )
-      .subscribe();
-
-    const walletChannel = supabase
-      .channel(`chat:${sessionId}:wallet`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'chat_wallets', filter: `session_id=eq.${sessionId}` },
-        (payload) => {
-          const updatedWallet = payload.new;
-          setWalletStatus(updatedWallet.status);
-          setBalance(Number(updatedWallet.balance));
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(messagesChannel);
-      supabase.removeChannel(walletChannel);
-    };
-  }, [sessionId, currentUserId]);
-
-  const handleTopUp = async (amount: number) => {
-    if (!currentUserId) return;
-    
-    // In a real flow, this triggers Moolre payment gateway.
-    await supabase
-      .from('chat_wallets')
-      .update({ balance: amount, status: 'funded' })
-      .eq('session_id', sessionId);
-
-    await supabase.from('messages').insert({
-      session_id: sessionId,
-      sender_id: currentUserId,
-      content: `Wallet funded with GH₵${amount.toFixed(2)} via Moolre.`,
-      message_type: 'wallet_action'
-    });
-  };
-
-  const handleRelease = async () => {
-    if (!currentUserId) return;
-    
-    await supabase
-      .from('chat_wallets')
-      .update({ status: 'released' })
-      .eq('session_id', sessionId);
-
-    await supabase.from('messages').insert([
-      {
-        session_id: sessionId,
-        sender_id: currentUserId,
-        content: `User released GH₵${balance.toFixed(2)} to the shopper.`,
-        message_type: 'wallet_action'
-      }
-    ]);
-  };
-
-  const handleWithdraw = async (momoNumber: string) => {
-    // Shopper triggers this.
-  };
-
-  const handleSendMessage = async (content: string) => {
-    if (!currentUserId) return;
-    
-    await supabase.from('messages').insert({
-      session_id: sessionId,
-      sender_id: currentUserId,
-      content,
-      message_type: 'text'
-    });
-  };
-
-  if (loading) {
+  if (authLoading || loading) {
     return (
-      <div className="flex flex-col h-screen bg-white max-w-md mx-auto items-center justify-center text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-        <p>Opening chat...</p>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="text-center">
+           <Loader2 className="animate-spin text-emerald-500 w-10 h-10 mx-auto mb-4" />
+           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Initializing Tactical Link...</p>
+        </div>
       </div>
     );
   }
 
-  // Determine role and other party name
-  const isUser = currentUserId === session?.user_id;
-  const shopperName = isUser ? "Shopper" : "Customer"; // In real app, fetch name from profiles
-
-  const isClosed = session?.status === 'closed';
+  if (!user || !role || !actualSessionId) {
+    return (
+      <div className="flex flex-col h-screen items-center justify-center bg-background p-8 text-center">
+        <div className="w-20 h-20 bg-rose-500/10 rounded-3xl flex items-center justify-center mb-6 border border-rose-500/20">
+           <ArrowLeft className="w-10 h-10 text-rose-500" />
+        </div>
+        <h2 className="text-2xl font-black mb-2 italic tracking-tighter">Tactical Lockout</h2>
+        <p className="text-muted-foreground mb-8 text-sm max-w-xs mx-auto leading-relaxed font-medium">
+          You do not have the required clearance to view this mission&apos;s communication channel.
+        </p>
+        <Link href="/" className="w-full max-w-xs text-emerald-500 font-bold flex items-center justify-center gap-3 uppercase text-[11px] tracking-[0.2em] bg-emerald-500/10 px-8 py-5 rounded-[24px] border border-emerald-500/20 hover:bg-emerald-500/20 transition-all active:scale-95 shadow-2xl shadow-emerald-500/10">
+          <ArrowLeft className="w-4 h-4" /> Return to HQ
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex flex-col h-screen bg-white w-full max-w-4xl mx-auto shadow-xl relative overflow-hidden">
-      {/* Header */}
-      <header className="bg-slate-900 text-white p-4 sticky top-0 z-20 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Link href="/user/activity" className="p-2 -ml-2 hover:bg-slate-800 rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="font-semibold text-base leading-tight">
-              {isUser ? "Gig Rider" : "Customer"}
-            </h1>
-            <p className="text-xs text-emerald-400 flex items-center">
-              <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${isClosed ? 'bg-slate-400' : 'bg-emerald-400 animate-pulse'}`}></span>
-              {isClosed ? 'Session Closed' : 'Online'} • {session?.gigs?.description || "Gig Chat"}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button className="p-2 hover:bg-slate-800 rounded-full transition-colors">
-            <Phone className="w-5 h-5" />
-          </button>
-          <button className="p-2 hover:bg-slate-800 rounded-full transition-colors">
-            <MoreVertical className="w-5 h-5" />
-          </button>
-        </div>
-      </header>
-
-      {/* Closed Banner */}
-      {isClosed && (
-        <div className="bg-slate-100 border-b border-slate-200 px-6 py-3 flex items-center gap-3">
-          <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center shrink-0">
-            <CheckCircle2 className="w-5 h-5 text-slate-500" />
-          </div>
-          <p className="text-xs font-bold text-slate-600">
-            This service is completed. Chat is closed.
-          </p>
-        </div>
-      )}
-
-      {/* Wallet Widget */}
-      <div className={isClosed ? "opacity-60 pointer-events-none" : ""}>
-        <WalletWidget
-          status={walletStatus}
-          balance={balance}
-          userRole={isUser ? "user" : "shopper"}
-          onTopUp={handleTopUp}
-          onRelease={handleRelease}
-          onWithdraw={handleWithdraw}
-        />
-      </div>
-
-      {/* Chat Timeline */}
-      <ChatTimeline
-        messages={messages}
-        currentUserId={currentUserId || ""}
-        shopperId={session?.shopper_id}
-        shopperName={isUser ? "Rider" : "Customer"}
-      />
-
-      {/* Chat Input */}
-      <ChatInput onSendMessage={handleSendMessage} disabled={isClosed} />
+    <div className="h-screen w-full max-w-2xl mx-auto shadow-2xl border-x border-border overflow-hidden flex flex-col bg-background">
+       <ChatRoom
+         sessionId={actualSessionId}
+         role={role}
+         currentUserId={user.id}
+       />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 const https = require('https');
 
-const SUPABASE_URL = 'lfkckxzgjqxguwwjwzyu.supabase.co';
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxma2NreHpnanF4Z3V3d2p3enl1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3ODYwNjE2MCwiZXhwIjoyMDk0MTgyMTYwfQ.yIJpiflu7V00BUbCUBpoxfkVwTfpogRL1e5gpIBIbS4';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Run individual ALTER TABLE statements via PATCH on a dummy row trick
 // Actually, the correct Supabase way is via the SQL API at /rest/v1/rpc

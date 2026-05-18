@@ -52,15 +52,15 @@ export default function ActivityPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-50 w-full pb-24 relative">
-      <header className="px-6 pt-12 pb-6 bg-white border-b border-slate-100 sticky top-0 z-50">
+    <div className="flex flex-col min-h-screen bg-background w-full pb-24 relative">
+      <header className="px-6 pt-12 pb-6 bg-card border-b border-border sticky top-0 z-50">
         <div className="max-w-7xl mx-auto w-full">
-          <h1 className="text-2xl font-black text-slate-800">Your Activity</h1>
-          <div className="flex mt-6 bg-slate-100 p-1 rounded-2xl max-w-md">
+          <h1 className="text-2xl font-black text-foreground">Your Activity</h1>
+          <div className="flex mt-6 bg-muted p-1 rounded-2xl max-w-md">
             <button 
               onClick={() => setActiveTab("ongoing")}
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                activeTab === "ongoing" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500"
+                activeTab === "ongoing" ? "bg-card text-emerald-600 shadow-sm" : "text-muted-foreground"
               }`}
             >
               Ongoing
@@ -68,7 +68,7 @@ export default function ActivityPage() {
             <button 
               onClick={() => setActiveTab("past")}
               className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
-                activeTab === "past" ? "bg-white text-emerald-600 shadow-sm" : "text-slate-500"
+                activeTab === "past" ? "bg-card text-emerald-600 shadow-sm" : "text-muted-foreground"
               }`}
             >
               Past
@@ -79,7 +79,7 @@ export default function ActivityPage() {
 
       <div className="flex-1 p-6 max-w-7xl mx-auto w-full">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+          <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <Loader2 className="w-8 h-8 animate-spin mb-2" />
             <p className="text-sm font-bold uppercase tracking-widest">Loading Mission Control…</p>
           </div>
@@ -87,11 +87,11 @@ export default function ActivityPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {(activeTab === "ongoing" ? ongoing : past).length === 0 ? (
               <div className="text-center py-20 px-10 col-span-full">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Clock className="w-10 h-10 text-slate-300" />
+                <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Clock className="w-10 h-10 text-muted-foreground/30" />
                 </div>
-                <h3 className="text-lg font-black text-slate-800">No {activeTab} activity</h3>
-                <p className="text-sm text-slate-500 mt-2">When you request a rider, it will appear here.</p>
+                <h3 className="text-lg font-black text-foreground">No {activeTab} activity</h3>
+                <p className="text-sm text-muted-foreground mt-2">When you request a rider, it will appear here.</p>
               </div>
             ) : (
               (activeTab === "ongoing" ? ongoing : past).map((item) => (
@@ -151,20 +151,20 @@ function ActivityCard({ item, tab, onRefresh }: { item: any, tab: Tab, onRefresh
     <motion.div 
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100"
+      className="bg-card p-5 rounded-3xl shadow-sm border border-border"
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-            item.status === 'completed' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+            item.status === 'completed' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'
           }`}>
             {isDirect ? <Bike className="w-6 h-6" /> : <Package className="w-6 h-6" />}
           </div>
           <div>
-            <h3 className="font-bold text-slate-800">
+            <h3 className="font-bold text-foreground">
               {isDirect ? "Direct Rider Request" : "Broadcast Delivery"}
             </h3>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">
               {new Date(item.created_at).toLocaleDateString()} · {new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
             </p>
           </div>
@@ -179,11 +179,11 @@ function ActivityCard({ item, tab, onRefresh }: { item: any, tab: Tab, onRefresh
       </div>
 
       <div className="space-y-2 mb-4">
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+        <div className="flex items-center gap-2 text-xs font-bold text-foreground/70">
           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
           <span className="truncate">{item.pickup_landmark}</span>
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold text-slate-600">
+        <div className="flex items-center gap-2 text-xs font-bold text-foreground/70">
           <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
           <span className="truncate">{item.dropoff_landmark}</span>
         </div>
@@ -195,7 +195,7 @@ function ActivityCard({ item, tab, onRefresh }: { item: any, tab: Tab, onRefresh
             <button 
               onClick={() => router.push(`/user/chat/${item.id}`)}
               disabled={isPending}
-              className="flex-[2] bg-slate-900 text-white font-black py-3 rounded-2xl flex items-center justify-center gap-2 text-sm hover:bg-slate-800 transition-colors disabled:bg-slate-200 disabled:text-slate-400"
+              className="flex-[2] bg-foreground text-background font-black py-3 rounded-2xl flex items-center justify-center gap-2 text-sm hover:opacity-90 transition-all disabled:bg-muted disabled:text-muted-foreground"
             >
               <MessageSquare className="w-4 h-4" />
               {isPending ? "Waiting for Accept..." : "Open Chat"}
@@ -204,14 +204,14 @@ function ActivityCard({ item, tab, onRefresh }: { item: any, tab: Tab, onRefresh
               <>
                 <button 
                   onClick={() => setIsEditing(true)}
-                  className="flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-2xl text-sm hover:bg-slate-200 transition-colors border border-slate-200"
+                  className="flex-1 bg-muted text-muted-foreground font-bold py-3 rounded-2xl text-sm hover:bg-muted/80 transition-colors border border-border"
                 >
                   Edit
                 </button>
                 <button 
                   onClick={handleCancel}
                   disabled={loading}
-                  className="flex-1 bg-rose-50 text-rose-600 font-bold py-3 rounded-2xl text-sm hover:bg-rose-100 transition-colors border border-rose-100"
+                  className="flex-1 bg-rose-500/10 text-rose-500 font-bold py-3 rounded-2xl text-sm hover:bg-rose-500/20 transition-colors border border-rose-500/20"
                 >
                   {loading ? "..." : "Cancel"}
                 </button>
@@ -221,7 +221,7 @@ function ActivityCard({ item, tab, onRefresh }: { item: any, tab: Tab, onRefresh
         ) : (
           <button 
             onClick={() => router.push(`/user/chat/${item.id}`)}
-            className="w-full bg-slate-50 text-slate-600 font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-sm hover:bg-slate-100 transition-colors border border-slate-100"
+            className="w-full bg-muted text-muted-foreground font-bold py-3 rounded-2xl flex items-center justify-center gap-2 text-sm hover:bg-muted/80 transition-colors border border-border"
           >
             View Summary
             <ChevronRight className="w-4 h-4" />
@@ -237,32 +237,32 @@ function ActivityCard({ item, tab, onRefresh }: { item: any, tab: Tab, onRefresh
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsEditing(false)}
-              className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             />
             <motion.div 
               initial={{ y: "100%" }}
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
-              className="relative w-full max-w-md bg-white rounded-t-[32px] p-6 pt-8 shadow-2xl"
+              className="relative w-full max-w-md bg-card rounded-t-[32px] p-6 pt-8 shadow-2xl"
             >
-              <h2 className="text-xl font-black text-slate-800 mb-6">Edit Landmarks</h2>
+              <h2 className="text-xl font-black text-foreground mb-6">Edit Landmarks</h2>
               <div className="space-y-4 mb-8">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Pickup Landmark</label>
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">Pickup Landmark</label>
                   <input 
                     type="text" 
                     value={pickup}
                     onChange={(e) => setPickup(e.target.value)}
-                    className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-800 font-bold outline-none"
+                    className="w-full bg-muted border-none rounded-2xl py-4 px-6 text-foreground font-bold outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 ml-1">Dropoff Landmark</label>
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">Dropoff Landmark</label>
                   <input 
                     type="text" 
                     value={dropoff}
                     onChange={(e) => setDropoff(e.target.value)}
-                    className="w-full bg-slate-50 border-none rounded-2xl py-4 px-6 text-slate-800 font-bold outline-none"
+                    className="w-full bg-muted border-none rounded-2xl py-4 px-6 text-foreground font-bold outline-none"
                   />
                 </div>
               </div>
