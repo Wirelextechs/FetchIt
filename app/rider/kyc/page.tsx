@@ -19,6 +19,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase } from "@/lib/supabase/client";
+import Webcam from "react-webcam";
 
 type Step = 1 | 2 | 3 | 4 | 5;
 
@@ -34,8 +35,14 @@ export default function RiderKycPage() {
   const [idNumber, setIdNumber] = useState(""); // Regex Target: GHA-XXXXXXXXX-X
   const [idCardFile, setIdCardFile] = useState<File | null>(null);
   const [idCardPreview, setIdCardPreview] = useState<string | null>(null);
+  
+  // Selfie States & Webcam References
   const [selfieFile, setSelfieFile] = useState<File | null>(null);
   const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
+  const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const webcamRef = useRef<Webcam>(null);
+
   const [vehicleModel, setVehicleModel] = useState("");
   const [licensePlate, setLicensePlate] = useState("");
 
@@ -48,7 +55,36 @@ export default function RiderKycPage() {
 
   // Refs for custom trigger inputs
   const idFileInputRef = useRef<HTMLInputElement>(null);
-  const selfieFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Helper: Convert Base64 Data URI to standard File Object
+  const base64ToFile = (base64String: string, filename: string): File => {
+    const arr = base64String.split(",");
+    const mime = arr[0].match(/:(.*?);/)?.[1] || "image/jpeg";
+    const bstr = atob(arr[1]);
+    let n = bstr.length;
+    const u8arr = new Uint8Array(n);
+    while (n--) {
+      u8arr[n] = bstr.charCodeAt(n);
+    }
+    return new File([u8arr], filename, { type: mime });
+  };
+
+  // Helper: Capture screenshot from live stream
+  const captureSelfie = () => {
+    if (webcamRef.current) {
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (imageSrc) {
+        setSelfiePreview(imageSrc);
+        try {
+          const file = base64ToFile(imageSrc, `selfie_${Date.now()}.jpg`);
+          setSelfieFile(file);
+          setCameraError(null);
+        } catch (err) {
+          console.error("Failed to convert captured selfie base64 to file:", err);
+        }
+      }
+    }
+  };
 
   // Validation Checkers
   const isIdValid = (id: string) => {
@@ -381,7 +417,7 @@ export default function RiderKycPage() {
                 exit={{ opacity: 0, x: -20 }}
                 className="space-y-6"
               >
-                <div className="text-center mb-6">
+                <div className="text-center mb-4">
                   <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 mx-auto mb-3 border border-emerald-500/20">
                     <Camera className="w-6 h-6" />
                   </div>
@@ -389,64 +425,103 @@ export default function RiderKycPage() {
                   <p className="text-xs text-slate-500 mt-1">To ensure security, take a live selfie now.</p>
                 </div>
 
-                {/* HTML5 Native user camera capture - strict liveness enforcement */}
-                <input 
-                  type="file" 
-                  ref={selfieFileInputRef}
-                  accept="image/*"
-                  capture="user" 
-                  onChange={handleSelfieCaptured}
-                  className="hidden"
-                />
-
-                <div 
-                  onClick={() => selfieFileInputRef.current?.click()}
-                  className={`border-2 border-dashed rounded-[30px] p-8 text-center cursor-pointer transition-all relative overflow-hidden ${
-                    selfiePreview 
-                      ? "border-emerald-500/50 bg-emerald-500/5" 
-                      : "border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 bg-slate-50/50 dark:bg-slate-950/20"
-                  }`}
-                >
-                  {selfiePreview ? (
-                    <div className="space-y-4">
-                      <div className="relative w-36 h-36 mx-auto rounded-full overflow-hidden border-4 border-emerald-500/40 shadow-inner">
-                        <img 
-                          src={selfiePreview} 
-                          alt="Selfie Preview" 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Selfie captured successfully</p>
+                {/* Webcam glassmorphic card container with rounded corners and hidden overflow */}
+                <div className="relative w-full aspect-video rounded-[30px] overflow-hidden border border-slate-200 dark:border-white/10 bg-slate-950/90 shadow-2xl flex items-center justify-center">
+                  {cameraError ? (
+                    <div className="p-6 text-center space-y-3 z-10">
+                      <XCircle className="w-12 h-12 text-rose-500 mx-auto animate-pulse" />
+                      <p className="text-xs font-bold text-rose-500 leading-relaxed max-w-xs mx-auto">
+                        {cameraError}
+                      </p>
                     </div>
+                  ) : selfiePreview ? (
+                    // Captured Static Preview
+                    <img 
+                      src={selfiePreview} 
+                      alt="Captured Selfie Preview" 
+                      className="w-full h-full object-cover"
+                    />
                   ) : (
-                    <div className="space-y-4 py-4">
-                      <div className="w-16 h-16 rounded-full border-4 border-slate-300 dark:border-white/20 flex items-center justify-center mx-auto text-slate-400 animate-pulse relative">
-                        <div className="absolute inset-0 rounded-full border-4 border-emerald-500/30 animate-ping" />
-                        <Camera className="w-6 h-6 text-slate-500" />
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-850 dark:text-white">Tap to open live camera</p>
-                        <p className="text-[9px] text-slate-400">Strictly enforces real-time face matching</p>
-                      </div>
-                    </div>
+                    // Live video feed
+                    <Webcam
+                      audio={false}
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      videoConstraints={{
+                        facingMode: facingMode,
+                        width: 1280,
+                        height: 720
+                      }}
+                      onUserMediaError={() => setCameraError("Camera access is required for verification. Please enable it in your browser settings.")}
+                      onUserMedia={() => setCameraError(null)}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+
+                  {/* Camera Toggler overlay */}
+                  {!selfiePreview && !cameraError && (
+                    <button
+                      onClick={() => setFacingMode((prev) => prev === "user" ? "environment" : "user")}
+                      className="absolute top-4 right-4 bg-slate-950/70 hover:bg-slate-950 backdrop-blur-md text-white w-10 h-10 rounded-full flex items-center justify-center border border-white/10 active:scale-90 transition-all z-20 shadow-md"
+                      title="Switch Camera"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                      </svg>
+                    </button>
                   )}
                 </div>
 
-                <div className="flex gap-4">
-                  <button
-                    onClick={prevStep}
-                    className="flex-1 border border-slate-200 dark:border-white/10 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:text-slate-950 dark:hover:text-white transition-colors active:scale-95"
-                  >
-                    Back
-                  </button>
-                  <button
-                    disabled={!selfieFile}
-                    onClick={nextStep}
-                    className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 disabled:opacity-40 transition-all shadow-lg active:scale-95"
-                  >
-                    Vehicle Setup
-                  </button>
-                </div>
+                {/* Switchable Controls Area */}
+                {selfiePreview ? (
+                  <div className="space-y-4">
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest text-center">Selfie captured successfully</p>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => {
+                          setSelfiePreview(null);
+                          setSelfieFile(null);
+                        }}
+                        className="flex-1 border border-slate-200 dark:border-white/10 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:text-slate-950 dark:hover:text-white transition-colors active:scale-95 bg-white/5"
+                      >
+                        Retake
+                      </button>
+                      <button
+                        onClick={nextStep}
+                        className="flex-1 bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-emerald-500 transition-all shadow-lg active:scale-95"
+                      >
+                        Confirm & Continue
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {!cameraError && (
+                      <button
+                        onClick={captureSelfie}
+                        className="w-full bg-white dark:bg-slate-800 text-slate-950 dark:text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-100 dark:hover:bg-slate-700 transition-all shadow-md active:scale-95 border border-slate-200 dark:border-white/10 flex items-center justify-center gap-2"
+                      >
+                        <Camera className="w-4 h-4 text-emerald-500 animate-pulse" />
+                        Capture Photo
+                      </button>
+                    )}
+                    
+                    <div className="flex gap-4">
+                      <button
+                        onClick={prevStep}
+                        className="flex-1 border border-slate-200 dark:border-white/10 text-slate-500 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:text-slate-950 dark:hover:text-white transition-colors active:scale-95"
+                      >
+                        Back
+                      </button>
+                      <button
+                        disabled={true}
+                        className="flex-1 bg-slate-150 dark:bg-slate-800/30 text-slate-400 dark:text-slate-600 py-4 rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed border border-transparent"
+                      >
+                        Confirm & Continue
+                      </button>
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
 
