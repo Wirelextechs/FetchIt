@@ -150,11 +150,6 @@ export default function ProfilePage() {
                <h2 className="px-2 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Personal Settings</h2>
                <div className="bg-card rounded-[32px] shadow-sm border border-border overflow-hidden">
                   <MenuItem 
-                    icon={<Bike className="w-5 h-5 text-emerald-600" />} 
-                    label="Rider Portal" 
-                    onClick={() => router.push('/rider/dashboard')}
-                  />
-                  <MenuItem 
                     icon={<MapPin className="w-5 h-5 text-blue-500" />} 
                     label="Saved Locations" 
                     onClick={() => router.push('/profile/locations')}

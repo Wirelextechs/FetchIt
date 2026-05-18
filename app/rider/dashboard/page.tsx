@@ -9,7 +9,9 @@ import {
   Loader2,
   AlertCircle,
   ShieldCheck,
-  Navigation
+  Navigation,
+  DollarSign,
+  Edit3
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -31,6 +33,11 @@ export default function RiderDashboard() {
   const [isVerified, setIsVerified] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isKycModalOpen, setIsKycModalOpen] = useState(false);
+  
+  // Zone Pricing Matrix States
+  const [priceWithinCity, setPriceWithinCity] = useState(15);
+  const [priceAroundCity, setPriceAroundCity] = useState(30);
+  const [priceOutsideCity, setPriceOutsideCity] = useState(50);
 
   const fetchGigs = useCallback(async () => {
     const { data, error } = await supabase
@@ -45,7 +52,7 @@ export default function RiderDashboard() {
     setLoading(false);
   }, []);
 
-  // Fetch user's profile verification status
+  // Fetch user's profile verification status and zone rates
   useEffect(() => {
     if (!user) {
       setIsVerified(false);
@@ -55,12 +62,15 @@ export default function RiderDashboard() {
     const fetchProfile = async () => {
       const { data } = await supabase
         .from('users')
-        .select('is_verified')
+        .select('is_verified, price_within_city, price_around_city, price_outside_city')
         .eq('id', user.id)
         .single();
       
       if (data) {
         setIsVerified(!!data.is_verified);
+        if (data.price_within_city !== null) setPriceWithinCity(Number(data.price_within_city));
+        if (data.price_around_city !== null) setPriceAroundCity(Number(data.price_around_city));
+        if (data.price_outside_city !== null) setPriceOutsideCity(Number(data.price_outside_city));
       }
     };
 
@@ -216,6 +226,45 @@ export default function RiderDashboard() {
       {/* Tactical Radar Map */}
       <div className="h-[45vh] lg:h-full lg:flex-1 relative border-r border-border shrink-0">
         <RadarMap gigs={gigs} />
+        
+        {/* Current Rates HUD Widget */}
+        <div className="absolute top-6 left-6 right-6 z-[400] glass p-4 rounded-[24px] border border-border flex flex-wrap gap-4 items-center justify-between shadow-2xl backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500">
+              <DollarSign className="w-4 h-4" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest leading-none">Your Zone Rates</p>
+              <h3 className="text-[11px] font-bold text-foreground mt-0.5">Techiman Delivery Pricing</h3>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Central</span>
+              <span className="text-xs font-black text-emerald-500 italic">GH₵{priceWithinCity}</span>
+            </div>
+            <div className="w-[1px] h-6 bg-border" />
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Around</span>
+              <span className="text-xs font-black text-emerald-500 italic">GH₵{priceAroundCity}</span>
+            </div>
+            <div className="w-[1px] h-6 bg-border" />
+            <div className="flex flex-col items-center">
+              <span className="text-[8px] font-black uppercase tracking-widest text-muted-foreground">Outside</span>
+              <span className="text-xs font-black text-emerald-500 italic">GH₵{priceOutsideCity}</span>
+            </div>
+            <div className="w-[1px] h-6 bg-border" />
+            <button 
+              onClick={() => router.push("/rider/settings")}
+              className="p-2 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-xl transition-all active:scale-95 flex items-center justify-center"
+              title="Edit Rates"
+            >
+              <Edit3 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+
         <div className="absolute bottom-20 lg:bottom-12 left-6 z-[400] glass px-4 py-2 rounded-2xl border border-border flex items-center gap-3">
           <div className="relative">
             <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />

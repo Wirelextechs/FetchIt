@@ -253,7 +253,7 @@ export default function RiderKycPage() {
   };
 
   return (
-    <div className="min-h-full w-full flex flex-col bg-slate-50 dark:bg-slate-950 font-sans p-4 sm:p-8 relative overflow-y-auto pb-40">
+    <div className="min-h-screen flex flex-col overflow-y-auto pb-32 bg-slate-50 dark:bg-slate-950 font-sans p-4 sm:p-8 relative">
       {/* Background Glows */}
       <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full pointer-events-none" />
