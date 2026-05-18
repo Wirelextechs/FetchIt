@@ -33,6 +33,10 @@ CREATE TABLE IF NOT EXISTS public.kyc_submissions (
 -- Enable RLS on kyc_submissions
 ALTER TABLE public.kyc_submissions ENABLE ROW LEVEL SECURITY;
 
+-- Drop old policies to prevent duplicate insertion errors
+DROP POLICY IF EXISTS "Riders can insert their own submissions" ON public.kyc_submissions;
+DROP POLICY IF EXISTS "Riders can select their own submissions" ON public.kyc_submissions;
+
 -- Submissions Policies
 CREATE POLICY "Riders can insert their own submissions"
   ON public.kyc_submissions
@@ -58,11 +62,12 @@ VALUES (
 )
 ON CONFLICT (id) DO NOTHING;
 
--- Storage Bucket Security Policies (RLS)
--- Enable RLS on storage.objects table if not already enabled
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Drop old storage policies to prevent duplicates
+DROP POLICY IF EXISTS "Allow authenticated users to upload KYC documents" ON storage.objects;
+DROP POLICY IF EXISTS "Allow users to read their own KYC documents" ON storage.objects;
 
 -- Allow authenticated users to upload (insert) files into kyc_documents
+-- Note: Row Level Security is already enabled on storage.objects by default in all Supabase instances.
 CREATE POLICY "Allow authenticated users to upload KYC documents"
   ON storage.objects
   FOR INSERT
