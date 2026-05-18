@@ -10,7 +10,7 @@ export function BottomNav({ className }: { className?: string }) {
   const pathname = usePathname();
 
   const links = [
-    { href: "/", label: "Home", icon: Home },
+    { href: "/user/explore", label: "Home", icon: Home },
     { href: "/user/activity", label: "Activity", icon: Activity },
     { href: "/map", label: "Map", icon: Map },
     { href: "/profile", label: "Profile", icon: UserCircle },
