@@ -14,7 +14,7 @@ export function KycPromptModal({ isOpen, onClose }: KycPromptModalProps) {
 
   const handleStartKyc = () => {
     onClose();
-    router.push("/rider/profile");
+    router.push("/rider/kyc");
   };
 
   return (
