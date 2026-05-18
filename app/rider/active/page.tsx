@@ -7,7 +7,6 @@ import {
   ShieldCheck,
   Loader2,
   Navigation,
-  ChevronRight,
   Radar
 } from "lucide-react";
 import { supabase } from "@/lib/supabase/client";
@@ -24,29 +23,40 @@ export default function ActiveMissionPage() {
 
   const fetchActiveMission = useCallback(async () => {
     if (!user) return;
+    console.log("[RiderActive] Fetching active mission for user:", user.id);
     
-    // 1. Fetch assigned gig
-    const { data: gig } = await supabase
+    // 1. Fetch assigned gig (assigned OR in_transit)
+    const { data: gig, error: gigError } = await supabase
       .from('gigs')
       .select('*')
       .eq('assigned_rider_id', user.id)
-      .eq('status', 'assigned')
-      .single();
+      .in('status', ['assigned', 'in_transit'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
+    if (gigError) console.error("[RiderActive] Gig fetch error:", gigError);
+
     let activeMission = null;
 
     if (gig) {
+      console.log("[RiderActive] Found assigned gig:", gig.id);
       activeMission = { ...gig, type: 'broadcast' };
     } else {
       // 2. Fallback to direct requests if no gig assigned
-      const { data: request } = await supabase
+      const { data: request, error: reqError } = await supabase
         .from('direct_requests')
         .select('*')
         .eq('rider_id', user.id)
         .eq('status', 'accepted')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
       
+      if (reqError) console.error("[RiderActive] Request fetch error:", reqError);
+
       if (request) {
+        console.log("[RiderActive] Found direct request:", request.id);
         activeMission = { ...request, type: 'direct' };
       }
     }
@@ -54,17 +64,25 @@ export default function ActiveMissionPage() {
     if (activeMission) {
       setMission(activeMission);
 
-      // 3. Fetch associated chat session
-      const { data: chatSession } = await supabase
+      // 3. Fetch associated chat session (be flexible with status)
+      const { data: chatSession, error: chatError } = await supabase
         .from('chat_sessions')
         .select('id')
         .or(`direct_request_id.eq.${activeMission.id},gig_id.eq.${activeMission.id}`)
-        .eq('status', 'active')
-        .single();
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (chatError) console.error("[RiderActive] Chat fetch error:", chatError);
 
       if (chatSession) {
+        console.log("[RiderActive] Found chat session:", chatSession.id);
         setChatSessionId(chatSession.id);
+      } else {
+        console.warn("[RiderActive] No chat session found for active mission.");
       }
+    } else {
+      console.log("[RiderActive] No active mission found.");
     }
 
     setLoading(false);
@@ -72,41 +90,52 @@ export default function ActiveMissionPage() {
 
   useEffect(() => {
     let isMounted = true;
-    if (isMounted) {
-      setLoading(true);
-      fetchActiveMission();
-    }
+
+    const init = async () => {
+       if (isMounted) {
+         setLoading(true);
+         await fetchActiveMission();
+       }
+    };
+    init();
+
     return () => { isMounted = false; };
   }, [fetchActiveMission]);
 
   const handleComplete = async () => {
     if (!confirm("🏁 Are you sure you've delivered the items? This will notify the user.")) return;
     const table = mission.type === 'direct' ? 'direct_requests' : 'gigs';
+
+    // We update mission status and also session status
     await supabase.from(table).update({ status: 'completed' }).eq('id', mission.id);
+    if (chatSessionId) {
+      await supabase.from('chat_sessions').update({ status: 'completed' }).eq('id', chatSessionId);
+    }
+
     router.push("/rider/analytics");
   };
 
   if (loading) return (
     <div className="h-screen flex flex-col items-center justify-center bg-background text-muted-foreground gap-4">
       <Loader2 className="w-10 h-10 animate-spin text-emerald-500" />
-      <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Comms...</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.2em]">Synchronizing Tactical Link...</p>
     </div>
   );
 
   if (!mission || !chatSessionId) return (
-    <div className="p-12 text-center flex flex-col items-center justify-center h-[calc(100vh-200px)]">
-      <div className="w-24 h-24 bg-muted rounded-[40px] flex items-center justify-center mx-auto mb-8 border border-border text-muted-foreground shadow-2xl">
+    <div className="p-12 text-center flex flex-col items-center justify-center h-screen bg-background">
+      <div className="w-24 h-24 bg-muted rounded-[40px] flex items-center justify-center mb-8 border border-border text-muted-foreground shadow-2xl">
         <Radar className="w-10 h-10 animate-pulse" />
       </div>
       <h2 className="text-2xl font-black text-foreground mb-3 tracking-tighter italic">No Active Mission</h2>
       <p className="text-muted-foreground text-sm font-medium px-10 leading-relaxed max-w-xs mx-auto">
-        Your tactical radar is clear. Return to dashboard to scan for new gigs.
+        Your tactical radar is currently clear. No assigned delivery missions detected in your sector.
       </p>
       <button 
         onClick={() => router.push("/rider/dashboard")}
-        className="mt-10 bg-emerald-600 text-white font-black px-10 py-5 rounded-[24px] shadow-2xl shadow-emerald-600/20 active:scale-95 transition-all text-[10px] uppercase tracking-[0.2em]"
+        className="mt-10 bg-emerald-600 text-white font-black px-12 py-5 rounded-[24px] shadow-2xl shadow-emerald-600/20 active:scale-95 transition-all text-[10px] uppercase tracking-[0.2em] hover:bg-emerald-500"
       >
-        Open Tactical Radar
+        Return to Dashboard
       </button>
     </div>
   );
@@ -158,7 +187,7 @@ export default function ActiveMissionPage() {
               <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Dropoff</p>
               <div className="text-xs font-bold text-foreground/70 truncate">{mission.dropoff_landmark}</div>
               <div className="absolute top-0 right-0 p-2 opacity-10">
-                <ChevronRight className="w-3 h-3" />
+                <Navigation className="w-3 h-3 rotate-90" />
               </div>
             </div>
           </div>
