@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   User, 
@@ -13,14 +13,64 @@ import {
   Settings,
   LogOut,
   Camera,
-  Verified
+  Verified,
+  Loader2
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase/client";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function RiderProfile() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
+  const [profile, setProfile] = useState<any>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
   
+  useEffect(() => {
+    if (!user) return;
+    const fetchProfile = async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+      if (!error && data) {
+        setProfile(data);
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  const handleSignOut = async () => {
+    if (!user) return;
+    setDisconnecting(true);
+    try {
+      // Step 1: Execute database mutation to take rider offline
+      const { error: offlineError } = await supabase
+        .from("users")
+        .update({ is_online: false })
+        .eq("id", user.id);
+
+      if (offlineError) {
+        console.error("Failed to set rider offline in database:", offlineError);
+      } else {
+        console.log("Rider is now offline in database.");
+      }
+
+      // Step 2: Clear Supabase session and sign out
+      await signOut();
+
+      // Step 3: Redirect to public marketing landing page
+      router.push("/");
+    } catch (err: any) {
+      console.error("Sign out transaction failed:", err);
+    } finally {
+      setDisconnecting(false);
+    }
+  };
+
   const payouts = [
     { id: 1, date: '2026-05-12', amount: 350.00, status: 'completed' },
     { id: 2, date: '2026-05-10', amount: 210.00, status: 'completed' },
@@ -64,7 +114,9 @@ export default function RiderProfile() {
               </button>
             </div>
 
-            <h1 className="text-3xl font-black text-foreground mb-1 tracking-tighter">Kwame Mensah</h1>
+            <h1 className="text-3xl font-black text-foreground mb-1 tracking-tighter">
+              {profile?.full_name || "Kwame Mensah"}
+            </h1>
             <p className="text-muted-foreground text-sm font-bold opacity-60">{user?.email}</p>
             
             <div className="flex items-center gap-4 mt-8">
@@ -96,7 +148,9 @@ export default function RiderProfile() {
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Ghana Card Status</p>
-            <p className="text-xs font-black text-foreground">VERIFIED</p>
+            <p className="text-xs font-black text-foreground">
+              {profile?.is_verified ? "VERIFIED" : "UNVERIFIED"}
+            </p>
           </div>
           <div className="bg-card p-6 rounded-[32px] border border-border group active:scale-95 transition-all">
             <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center mb-4 border border-blue-500/10">
@@ -142,9 +196,9 @@ export default function RiderProfile() {
         </div>
       </div>
 
-      {/* Account Settings */}
+      {/* Account Settings Menu (Clean Glassmorphic Items) */}
       <div className="space-y-3 pt-4">
-        <button className="w-full bg-muted/50 hover:bg-muted p-6 rounded-[32px] border border-border flex items-center justify-between transition-all group">
+        <Link href="/rider/settings" className="w-full bg-muted/50 hover:bg-muted p-6 rounded-[32px] border border-border flex items-center justify-between transition-all group">
           <div className="flex items-center gap-4 text-foreground">
             <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center">
               <Settings className="w-5 h-5" />
@@ -152,28 +206,24 @@ export default function RiderProfile() {
             <span className="text-[10px] font-black uppercase tracking-[0.2em]">Rider Settings</span>
           </div>
           <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
-        </button>
-        <button
-          onClick={() => signOut()}
-          className="w-full bg-rose-500/5 hover:bg-rose-500/10 p-6 rounded-[32px] border border-rose-500/10 flex items-center justify-between transition-all group"
-        >
-          <div className="flex items-center gap-4 text-rose-500">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-              <Settings className="w-5 h-5" />
-            </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Rider Settings</span>
-          </div>
-          <ChevronRight className="w-5 h-5 text-slate-700 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Link>
+
         <button 
-          onClick={() => signOut()}
-          className="w-full bg-rose-500/5 hover:bg-rose-500/10 p-6 rounded-[32px] border border-rose-500/10 flex items-center justify-between transition-all group"
+          onClick={handleSignOut}
+          disabled={disconnecting}
+          className="w-full bg-rose-500/5 hover:bg-rose-500/10 p-6 rounded-[32px] border border-rose-500/10 flex items-center justify-between transition-all group disabled:opacity-50"
         >
           <div className="flex items-center gap-4 text-rose-500">
             <div className="w-10 h-10 rounded-xl bg-rose-500/10 flex items-center justify-center">
-              <LogOut className="w-5 h-5" />
+              {disconnecting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <LogOut className="w-5 h-5" />
+              )}
             </div>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Go Offline & Sign Out</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">
+              {disconnecting ? "Disconnecting..." : "Go Offline & Sign Out"}
+            </span>
           </div>
         </button>
       </div>
