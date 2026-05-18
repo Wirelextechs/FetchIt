@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import { RiderLazyLogin } from "@/components/auth/RiderLazyLogin";
+import { KycPromptModal } from "@/components/kyc/KycPromptModal";
 
 export default function RiderLayout({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
@@ -25,7 +26,9 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   const [isOnline, setIsOnline] = useState(false);
   const [earnings, setEarnings] = useState(0.00);
   const [checkingRole, setCheckingRole] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
 
   const fetchRiderStatus = useCallback(async (userId: string, isActive: boolean) => {
     const { data } = await supabase
@@ -52,7 +55,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     const checkRole = async () => {
       const { data } = await supabase
         .from('users')
-        .select('role')
+        .select('role, is_verified')
         .eq('id', user.id)
         .single();
       
@@ -60,6 +63,7 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
         if (data.role !== 'rider') {
           router.push('/user/explore');
         } else {
+          setIsVerified(!!data.is_verified);
           setCheckingRole(false);
         }
       } else {
@@ -92,6 +96,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       setIsLoginModalOpen(true);
       return;
     }
+    if (!isVerified) {
+      setIsKycModalOpen(true);
+      return;
+    }
     const nextStatus = !isOnline;
     const { error } = await supabase
       .from('users')
@@ -104,6 +112,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   const triggerSOS = async () => {
     if (!user) {
       setIsLoginModalOpen(true);
+      return;
+    }
+    if (!isVerified) {
+      setIsKycModalOpen(true);
       return;
     }
     if (confirm("🚨 Trigger Emergency SOS? This will alert dispatch and pause your active gigs.")) {
@@ -193,10 +205,19 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
           {navLinks.map((link) => {
             const isActive = pathname === link.href;
             const Icon = link.icon;
+
+            const handleNavClick = (e: React.MouseEvent) => {
+              if (link.href === "/rider/profile" && !user) {
+                e.preventDefault();
+                setIsLoginModalOpen(true);
+              }
+            };
+
             return (
               <Link
                 key={link.href}
                 href={link.href}
+                onClick={handleNavClick}
                 className={`flex flex-col items-center gap-1.5 px-3 py-2 rounded-2xl relative transition-all duration-300 ${
                   isActive ? 'text-emerald-500' : 'text-muted-foreground hover:text-foreground'
                 }`}
@@ -229,6 +250,12 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
           setIsLoginModalOpen(false);
           window.location.reload();
         }}
+      />
+
+      {/* KYC Prompt Modal */}
+      <KycPromptModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
       />
     </div>
   );

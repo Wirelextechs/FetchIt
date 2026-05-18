@@ -17,6 +17,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { RiderLazyLogin } from "@/components/auth/RiderLazyLogin";
+import { KycPromptModal } from "@/components/kyc/KycPromptModal";
 
 const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { ssr: false });
 
@@ -27,7 +28,9 @@ export default function RiderDashboard() {
   const [loading, setLoading] = useState(true);
   const [directRequest, setDirectRequest] = useState<any>(null);
   const [countdown, setCountdown] = useState(180);
+  const [isVerified, setIsVerified] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isKycModalOpen, setIsKycModalOpen] = useState(false);
 
   const fetchGigs = useCallback(async () => {
     const { data, error } = await supabase
@@ -41,6 +44,28 @@ export default function RiderDashboard() {
     }
     setLoading(false);
   }, []);
+
+  // Fetch user's profile verification status
+  useEffect(() => {
+    if (!user) {
+      setIsVerified(false);
+      return;
+    }
+
+    const fetchProfile = async () => {
+      const { data } = await supabase
+        .from('users')
+        .select('is_verified')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        setIsVerified(!!data.is_verified);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     let isMounted = true;
@@ -133,6 +158,10 @@ export default function RiderDashboard() {
   const handleAccept = async (gigId: string, isDirect: boolean) => {
     if (!user) {
       setIsLoginModalOpen(true);
+      return;
+    }
+    if (!isVerified) {
+      setIsKycModalOpen(true);
       return;
     }
 
@@ -229,7 +258,7 @@ export default function RiderDashboard() {
               </div>
             ) : (
               gigs.map((gig) => (
-                <GigCard key={gig.id} gig={gig} onAccept={() => handleAccept(gig.id, false)} />
+                <GigCard key={gig.id} gig={gig} isVerified={isVerified} onAccept={() => handleAccept(gig.id, false)} />
               ))
             )}
           </div>
@@ -338,16 +367,22 @@ export default function RiderDashboard() {
           window.location.reload();
         }}
       />
+
+      {/* KYC Prompt Modal */}
+      <KycPromptModal
+        isOpen={isKycModalOpen}
+        onClose={() => setIsKycModalOpen(false)}
+      />
     </div>
   );
 }
 
-function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
+function GigCard({ gig, onAccept, isVerified }: { gig: any, onAccept: () => void, isVerified: boolean }) {
   const { user } = useAuth();
   const [claiming, setClaiming] = useState(false);
 
   const handleClaim = () => {
-    if (!user) {
+    if (!user || !isVerified) {
       onAccept();
       return;
     }

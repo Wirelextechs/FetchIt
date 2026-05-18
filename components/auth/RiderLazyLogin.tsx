@@ -92,11 +92,11 @@ export function RiderLazyLogin({ isOpen, onClose, onSuccess }: RiderLazyLoginPro
         });
       }
 
-      // 3. Set role = 'rider' for this authenticated user
+      // 3. Set role = 'rider' and is_verified = false for this authenticated user
       if (userId) {
         const { error: roleError } = await supabase
           .from('users')
-          .update({ role: 'rider' })
+          .update({ role: 'rider', is_verified: false })
           .eq('id', userId);
 
         if (roleError) {
