@@ -16,6 +16,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { RiderLazyLogin } from "@/components/auth/RiderLazyLogin";
 
 const RadarMap = dynamic(() => import("@/components/rider/RadarMap"), { ssr: false });
 
@@ -26,6 +27,7 @@ export default function RiderDashboard() {
   const [loading, setLoading] = useState(true);
   const [directRequest, setDirectRequest] = useState<any>(null);
   const [countdown, setCountdown] = useState(180);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const fetchGigs = useCallback(async () => {
     const { data, error } = await supabase
@@ -49,7 +51,7 @@ export default function RiderDashboard() {
          setLoading(true);
          await fetchGigs();
        }
-    };
+     };
     init();
 
     // Listen for new gigs
@@ -67,44 +69,49 @@ export default function RiderDashboard() {
       )
       .subscribe();
 
-    // Listen for direct requests specifically for this rider
-    const directChannel = supabase
-      .channel(`direct_requests:${user?.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'direct_requests',
-          filter: `rider_id=eq.${user?.id}`
-        },
-        (payload) => {
-          if (isMounted) {
-            setDirectRequest(payload.new);
-            setCountdown(180);
+    // Listen for direct requests specifically for this rider (only if authenticated)
+    let directChannel: any = null;
+    if (user) {
+      directChannel = supabase
+        .channel(`direct_requests:${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'direct_requests',
+            filter: `rider_id=eq.${user.id}`
+          },
+          (payload) => {
+            if (isMounted) {
+              setDirectRequest(payload.new);
+              setCountdown(180);
+            }
           }
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'direct_requests',
-          filter: `rider_id=eq.${user?.id}`
-        },
-        (payload) => {
-          if (isMounted && payload.new.status !== 'pending') {
-            setDirectRequest(null);
+        )
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'direct_requests',
+            filter: `rider_id=eq.${user.id}`
+          },
+          (payload) => {
+            if (isMounted && payload.new.status !== 'pending') {
+              setDirectRequest(null);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
+    }
 
     return () => {
       isMounted = false;
       supabase.removeChannel(channel);
-      supabase.removeChannel(directChannel);
+      if (directChannel) {
+        supabase.removeChannel(directChannel);
+      }
     };
   }, [user?.id, fetchGigs]);
 
@@ -124,7 +131,10 @@ export default function RiderDashboard() {
   }, [countdown, directRequest]);
 
   const handleAccept = async (gigId: string, isDirect: boolean) => {
-    if (!user) return;
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
 
     const table = isDirect ? 'direct_requests' : 'gigs';
 
@@ -192,39 +202,39 @@ export default function RiderDashboard() {
         
         <div className="flex-1 overflow-y-auto px-6 pb-10 pt-2 lg:pt-8 custom-scrollbar">
           <div className="flex justify-between items-end mb-8">
-          <div>
-            <h2 className="text-xl font-black tracking-tight text-foreground mb-1 italic">Tactical Radar</h2>
-            <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Missions in your sector</p>
+            <div>
+              <h2 className="text-xl font-black tracking-tight text-slate-950 dark:text-white mb-1 italic">Tactical Radar</h2>
+              <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Active Missions in your sector</p>
+            </div>
+            <div className="text-right">
+              <span className="text-2xl font-black text-emerald-500">{gigs.length}</span>
+              <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Gigs Ready</span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-2xl font-black text-emerald-500">{gigs.length}</span>
-            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">Gigs Ready</span>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-1 gap-4">
-          {loading ? (
-            <div className="py-20 flex flex-col items-center gap-4">
-              <Loader2 className="w-8 h-8 text-muted-foreground/30 animate-spin" />
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Updating Feed...</p>
-            </div>
-          ) : gigs.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border">
-                <Radar className="w-10 h-10 text-muted-foreground/20 animate-pulse" />
+          <div className="grid grid-cols-1 gap-4">
+            {loading ? (
+              <div className="py-20 flex flex-col items-center gap-4">
+                <Loader2 className="w-8 h-8 text-muted-foreground/30 animate-spin" />
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Updating Feed...</p>
               </div>
-              <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest px-10 leading-relaxed italic">
-                Quiet sector. Move to a glow zone to increase visibility.
-              </p>
-            </div>
-          ) : (
-            gigs.map((gig) => (
-              <GigCard key={gig.id} gig={gig} onAccept={() => handleAccept(gig.id, false)} />
-            ))
-          )}
+            ) : gigs.length === 0 ? (
+              <div className="py-16 text-center">
+                <div className="w-20 h-20 bg-muted rounded-3xl flex items-center justify-center mx-auto mb-6 border border-border">
+                  <Radar className="w-10 h-10 text-muted-foreground/20 animate-pulse" />
+                </div>
+                <p className="text-muted-foreground text-sm font-bold uppercase tracking-widest px-10 leading-relaxed italic">
+                  Quiet sector. Move to a glow zone to increase visibility.
+                </p>
+              </div>
+            ) : (
+              gigs.map((gig) => (
+                <GigCard key={gig.id} gig={gig} onAccept={() => handleAccept(gig.id, false)} />
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </div>
 
       {/* Direct Booking Takeover */}
       <AnimatePresence>
@@ -318,14 +328,29 @@ export default function RiderDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Guest Interceptor Lazy Login Modal */}
+      <RiderLazyLogin 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onSuccess={() => {
+          setIsLoginModalOpen(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }
 
 function GigCard({ gig, onAccept }: { gig: any, onAccept: () => void }) {
+  const { user } = useAuth();
   const [claiming, setClaiming] = useState(false);
 
   const handleClaim = () => {
+    if (!user) {
+      onAccept();
+      return;
+    }
     setClaiming(true);
     onAccept();
   };

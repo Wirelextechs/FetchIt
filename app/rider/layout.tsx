@@ -10,17 +10,22 @@ import {
   UserCircle, 
   Power, 
   AlertOctagon, 
-  DollarSign
+  DollarSign,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { RiderLazyLogin } from "@/components/auth/RiderLazyLogin";
 
 export default function RiderLayout({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isOnline, setIsOnline] = useState(false);
   const [earnings, setEarnings] = useState(0.00);
+  const [checkingRole, setCheckingRole] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   const fetchRiderStatus = useCallback(async (userId: string, isActive: boolean) => {
     const { data } = await supabase
@@ -34,6 +39,36 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
       setEarnings(Number(data.wallet_balance || 0));
     }
   }, []);
+
+  // ── Layout Guard: guest users are allowed, users with other roles are blocked ──
+  useEffect(() => {
+    if (authLoading) return;
+
+    if (!user) {
+      setCheckingRole(false);
+      return;
+    }
+
+    const checkRole = async () => {
+      const { data } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+      
+      if (data) {
+        if (data.role !== 'rider') {
+          router.push('/user/explore');
+        } else {
+          setCheckingRole(false);
+        }
+      } else {
+        setCheckingRole(false);
+      }
+    };
+
+    checkRole();
+  }, [user, authLoading, router]);
 
   useEffect(() => {
     let isActive = true;
@@ -53,6 +88,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   }, [user, fetchRiderStatus]);
 
   const toggleOnline = async () => {
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
     const nextStatus = !isOnline;
     const { error } = await supabase
       .from('users')
@@ -63,7 +102,10 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
   };
 
   const triggerSOS = async () => {
-    if (!user) return;
+    if (!user) {
+      setIsLoginModalOpen(true);
+      return;
+    }
     if (confirm("🚨 Trigger Emergency SOS? This will alert dispatch and pause your active gigs.")) {
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const { error } = await supabase
@@ -90,6 +132,14 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
     { href: "/rider/analytics", label: "Analytics", icon: BarChart3 },
     { href: "/rider/profile", label: "Profile", icon: UserCircle },
   ];
+
+  if (authLoading || (user && checkingRole)) {
+    return (
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="w-8 h-8 animate-spin text-emerald-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col bg-background text-foreground w-full relative overflow-hidden font-sans">
@@ -170,6 +220,16 @@ export default function RiderLayout({ children }: { children: React.ReactNode })
         <div className="absolute top-1/4 -left-1/4 w-96 h-96 bg-emerald-500/5 blur-[120px] rounded-full" />
         <div className="absolute bottom-1/4 -right-1/4 w-96 h-96 bg-blue-500/5 blur-[120px] rounded-full" />
       </div>
+
+      {/* Rider Lazy Login Modal */}
+      <RiderLazyLogin 
+        isOpen={isLoginModalOpen} 
+        onClose={() => setIsLoginModalOpen(false)} 
+        onSuccess={() => {
+          setIsLoginModalOpen(false);
+          window.location.reload();
+        }}
+      />
     </div>
   );
 }

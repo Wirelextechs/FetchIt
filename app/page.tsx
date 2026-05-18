@@ -250,7 +250,7 @@ export default function RootLandingPage() {
 
             <div className="w-full sm:w-auto self-start">
               <button
-                onClick={() => router.push("/rider/gigs")}
+                onClick={() => router.push("/rider/dashboard")}
                 className="w-full sm:w-auto bg-white dark:bg-white/5 text-slate-900 dark:text-white hover:bg-slate-50 dark:hover:bg-white/10 font-black text-[11px] uppercase tracking-[0.2em] py-5 px-8 rounded-2xl transition-all duration-300 active:scale-95 border border-slate-200 dark:border-white/10 flex items-center justify-center gap-2 shadow-sm"
               >
                 Become a Rider on FetchIt
@@ -557,7 +557,7 @@ export default function RootLandingPage() {
                 Post Your First Gig
               </button>
               <button
-                onClick={() => router.push("/rider/gigs")}
+                onClick={() => router.push("/rider/dashboard")}
                 className="w-full sm:w-auto bg-white/10 text-white hover:bg-white/20 font-black text-xs uppercase tracking-widest py-5 px-10 rounded-2xl transition-transform active:scale-95 border border-white/20"
               >
                 Become a Rider
@@ -586,7 +586,7 @@ export default function RootLandingPage() {
             <ul className="space-y-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
               <li><a href="/user/explore" className="hover:text-emerald-500 transition-colors">Explore Gigs</a></li>
               <li><a href="/map" className="hover:text-emerald-500 transition-colors">Rider Radar Map</a></li>
-              <li><a href="/rider/gigs" className="hover:text-emerald-500 transition-colors">Rider Board</a></li>
+              <li><a href="/rider/dashboard" className="hover:text-emerald-500 transition-colors">Rider Board</a></li>
             </ul>
           </div>
           <div>
